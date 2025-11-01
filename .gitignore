@@ -1,0 +1,102 @@
+### Node.js & General
+node_modules/
+dist/
+.env*
+.DS_Store
+.vscode/
+coverage/
+npm-debug.log*
+yarn-error.log*
+.idea/
+*.log
+*.swp
+*.swo
+
+### Build & Output
+build/
+out/
+tmp/
+temp/
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.expo/
+.vercel/
+.netlify/
+
+### OS & Editor
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+.fseventsd
+.sass-cache/
+.eslintcache
+.prettier*
+
+### Logs & Debug
+*.log
+*.gz
+*.tgz
+*.zip
+*.bak
+*.tmp
+*.pid
+
+### IDEs
+.idea/
+.project
+.classpath
+.settings/
+.history
+.swp
+.swo
+.vscode/
+.vscode-test/
+
+### Strapi
+admin/.cache/
+public/uploads/
+database/
+build/
+strapi-backups/
+
+### React
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.env*
+frontend/.cache/
+
+### Test & Coverage
+coverage/
+.nyc_output/
+test-results/
+__tests__/
+__mocks__/
+jest.config.js
+jest.setup.js
+
+### Misc
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.npm/
+.yarn/
+.pnp/
+.pnp.js
+.husky/
+.lintstagedrc*
+.prettier*
+.editorconfig
+.gitattributes
+.gitmodules
+.gitlab-ci.yml
+.github/
+
+docs/

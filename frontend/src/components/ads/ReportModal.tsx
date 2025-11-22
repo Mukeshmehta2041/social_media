@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import api from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
-import type { Report } from '../../types';
 
 interface ReportModalProps {
   adId: number;

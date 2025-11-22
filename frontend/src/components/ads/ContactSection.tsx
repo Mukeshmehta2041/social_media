@@ -6,8 +6,8 @@ interface ContactSectionProps {
 }
 
 const ContactSection = ({ ad }: ContactSectionProps) => {
-  // Use contactPhone, whatsappNumber, or user's phone as fallback
-  const phoneNumber = ad.contactPhone || ad.whatsappNumber || ad.user?.phone;
+  // Use contactPhone or whatsappNumber
+  const phoneNumber = ad.contactPhone || ad.whatsappNumber;
   const email = ad.contactEmail || ad.user?.email;
 
   const handleWhatsApp = () => {

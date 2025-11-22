@@ -1,0 +1,68 @@
+{
+  "kind": "collectionType",
+  "collectionName": "payment_requests",
+  "info": {
+    "singularName": "payment-request",
+    "pluralName": "payment-requests",
+    "displayName": "Payment Request",
+    "description": "Payment requests for subscription plans"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "required": true
+    },
+    "advertisement": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::advertisement.advertisement",
+      "mappedBy": "paymentRequest"
+    },
+    "subscriptionPlan": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::subscription-plan.subscription-plan",
+      "required": true
+    },
+    "amount": {
+      "type": "decimal",
+      "required": true,
+      "min": 0
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["pending", "paid", "failed", "cancelled"],
+      "default": "pending",
+      "required": true
+    },
+    "paymentMethod": {
+      "type": "string"
+    },
+    "transactionId": {
+      "type": "string"
+    },
+    "paymentProof": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images", "files"]
+    },
+    "adminNotes": {
+      "type": "text"
+    },
+    "paidAt": {
+      "type": "datetime"
+    },
+    "verifiedBy": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "admin::user"
+    }
+  }
+}
+

@@ -1,15 +1,21 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { generateWhatsAppUrl } from '../utils/whatsapp';
-import type { Advertisement, ApiResponse } from '../types';
+import PaymentStatus from '../components/subscription/PaymentStatus';
+import PlanSelector from '../components/subscription/PlanSelector';
+import PaymentRequestModal from '../components/subscription/PaymentRequestModal';
+import type { Advertisement, ApiResponse, SubscriptionLimitCheck, PaymentRequest, SubscriptionPlan } from '../types';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
   const queryClient = useQueryClient();
+  const [selectedAdForPayment, setSelectedAdForPayment] = useState<Advertisement | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -34,6 +40,26 @@ const Dashboard = () => {
         }) || [],
       };
       return filteredData;
+    },
+    enabled: isAuthenticated && !!user,
+  });
+
+  // Fetch subscription limit
+  const { data: subscriptionLimit } = useQuery<{ data: SubscriptionLimitCheck }>({
+    queryKey: ['subscription-limit', user?.id],
+    queryFn: async () => {
+      const response = await api.get('/user-subscriptions/check-limit');
+      return response.data;
+    },
+    enabled: isAuthenticated && !!user,
+  });
+
+  // Fetch payment requests for draft ads
+  const { data: paymentRequestsData } = useQuery<ApiResponse<PaymentRequest[]>>({
+    queryKey: ['payment-requests', user?.id],
+    queryFn: async () => {
+      const response = await api.get('/payment-requests?populate=*&sort=createdAt:desc');
+      return response.data;
     },
     enabled: isAuthenticated && !!user,
   });
@@ -76,8 +102,32 @@ const Dashboard = () => {
   const ads = Array.isArray(adsData?.data) ? adsData.data : [];
   const totalAds = ads.length;
   const activeAds = ads.filter((ad) => ad.status === 'approved').length;
-  const pendingAds = ads.filter((ad) => ad.status === 'pending').length;
+  const pendingAds = ads.filter((ad) => ad.status === 'pending' || ad.status === 'draft').length;
   const totalViews = ads.reduce((sum, ad) => sum + (ad.viewCount || 0), 0);
+  const paymentRequests = Array.isArray(paymentRequestsData?.data) ? paymentRequestsData.data : [];
+
+  // Get payment request for a specific ad
+  const getPaymentRequestForAd = (adId: number) => {
+    return paymentRequests.find((pr) => pr.advertisement?.id === adId);
+  };
+
+  const handleCompletePayment = (ad: Advertisement) => {
+    setSelectedAdForPayment(ad);
+  };
+
+  const handlePlanSelect = (plan: SubscriptionPlan) => {
+    setSelectedPlan(plan);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPaymentModal(false);
+    setSelectedAdForPayment(null);
+    setSelectedPlan(null);
+    queryClient.invalidateQueries({ queryKey: ['user-ads'] });
+    queryClient.invalidateQueries({ queryKey: ['payment-requests'] });
+    queryClient.invalidateQueries({ queryKey: ['subscription-limit'] });
+  };
 
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
@@ -163,7 +213,7 @@ const Dashboard = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm">Pending</p>
+              <p className="text-gray-600 text-sm">Draft/Pending</p>
               <p className="text-3xl font-bold text-yellow-600">{pendingAds}</p>
             </div>
             <div className="bg-yellow-100 rounded-full p-3">
@@ -215,6 +265,53 @@ const Dashboard = () => {
         </div>
 
       </div>
+
+      {/* Subscription Info */}
+      {subscriptionLimit?.data && (
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Subscription Status</h2>
+          {subscriptionLimit.data.hasActiveSubscription ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Plan:</span>
+                <span className="font-semibold text-gray-900">
+                  {subscriptionLimit.data.subscription?.plan.name || 'Active'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Posts Used:</span>
+                <span className="font-semibold text-gray-900">
+                  {subscriptionLimit.data.postsUsed} / {subscriptionLimit.data.postsLimit}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600">Posts Remaining:</span>
+                <span className={`font-semibold ${subscriptionLimit.data.postsRemaining > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {subscriptionLimit.data.postsRemaining}
+                </span>
+              </div>
+              {subscriptionLimit.data.subscription && (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Expires:</span>
+                  <span className="font-semibold text-gray-900">
+                    {new Date(subscriptionLimit.data.subscription.endDate).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-gray-600 mb-4">No active subscription</p>
+              <Link
+                to="/post-ad"
+                className="inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition"
+              >
+                Subscribe to Post Ads
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* My Ads Section */}
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -274,6 +371,15 @@ const Dashboard = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
+                        {ad.status === 'draft' && (
+                          <button
+                            onClick={() => handleCompletePayment(ad)}
+                            className="text-indigo-600 hover:text-indigo-800 font-semibold"
+                            title="Complete Payment"
+                          >
+                            💳 Pay
+                          </button>
+                        )}
                         <Link
                           to={`/ad/${ad.id}`}
                           className="text-indigo-600 hover:text-indigo-800"
@@ -288,13 +394,15 @@ const Dashboard = () => {
                         >
                           ✏️
                         </Link>
-                        <button
-                          onClick={() => handlePromote(ad)}
-                          className="text-green-600 hover:text-green-800"
-                          title="Promote"
-                        >
-                          📈
-                        </button>
+                        {ad.status === 'approved' && (
+                          <button
+                            onClick={() => handlePromote(ad)}
+                            className="text-green-600 hover:text-green-800"
+                            title="Promote"
+                          >
+                            📈
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDelete(ad.id)}
                           className="text-red-600 hover:text-red-800"
@@ -303,6 +411,11 @@ const Dashboard = () => {
                           🗑️
                         </button>
                       </div>
+                      {ad.status === 'draft' && getPaymentRequestForAd(ad.id) && (
+                        <div className="mt-2">
+                          <PaymentStatus paymentRequest={getPaymentRequestForAd(ad.id)!} />
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -311,6 +424,46 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+
+      {/* Payment Modal for Draft Ads */}
+      {selectedAdForPayment && !showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">Complete Payment for Ad</h2>
+                <button
+                  onClick={() => setSelectedAdForPayment(null)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-gray-900 mb-2">Advertisement</h3>
+                <p className="text-lg">{selectedAdForPayment.title}</p>
+              </div>
+              <PlanSelector
+                onSelectPlan={handlePlanSelect}
+                selectedPlanId={selectedPlan?.id}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Request Modal */}
+      {showPaymentModal && selectedPlan && selectedAdForPayment && (
+        <PaymentRequestModal
+          plan={selectedPlan}
+          advertisement={selectedAdForPayment}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedPlan(null);
+          }}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 };

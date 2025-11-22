@@ -20,6 +20,7 @@ const EditAd = lazy(() => import('../pages/EditAd'));
 const Dashboard = lazy(() => import('../pages/Dashboard'));
 const Profile = lazy(() => import('../pages/Profile'));
 const Settings = lazy(() => import('../pages/Settings'));
+const Subscription = lazy(() => import('../pages/Subscription'));
 const About = lazy(() => import('../pages/About'));
 const Terms = lazy(() => import('../pages/Terms'));
 const Privacy = lazy(() => import('../pages/Privacy'));
@@ -179,6 +180,16 @@ const router = createBrowserRouter([
           <ProtectedRoute>
             <LazyWrapper>
               <Settings />
+            </LazyWrapper>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'subscription',
+        element: (
+          <ProtectedRoute>
+            <LazyWrapper>
+              <Subscription />
             </LazyWrapper>
           </ProtectedRoute>
         ),

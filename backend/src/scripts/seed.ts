@@ -56,6 +56,51 @@ const cities = [
   { name: 'Meerut', state: 'Uttar Pradesh', country: 'India', latitude: 28.9845, longitude: 77.7064 },
 ];
 
+const subscriptionPlans = [
+  {
+    name: 'Weekly Plan',
+    duration: 'weekly',
+    postLimit: 3,
+    price: 500,
+    isActive: true,
+    features: {
+      '3 posts per week': true,
+      'Priority support': true,
+      'Basic analytics': true,
+    },
+    sortOrder: 1,
+  },
+  {
+    name: 'Monthly Plan',
+    duration: 'monthly',
+    postLimit: 12,
+    price: 1500,
+    isActive: true,
+    features: {
+      '12 posts per month': true,
+      'Priority support': true,
+      'Advanced analytics': true,
+      'Featured listing': true,
+    },
+    sortOrder: 2,
+  },
+  {
+    name: 'Yearly Plan',
+    duration: 'yearly',
+    postLimit: 150,
+    price: 12000,
+    isActive: true,
+    features: {
+      '150 posts per year': true,
+      '24/7 Priority support': true,
+      'Full analytics dashboard': true,
+      'Featured listing': true,
+      'Premium badge': true,
+    },
+    sortOrder: 3,
+  },
+];
+
 // Sample advertisements data
 const sampleAdvertisements = [
   {
@@ -226,6 +271,27 @@ export async function seedDatabase(strapi: Core.Strapi) {
       strapi.log.info(`✅ Created ${cities.length} cities`);
     } else {
       strapi.log.info('ℹ️  Cities already exist, skipping...');
+    }
+
+    // Seed Subscription Plans
+    const existingPlans = await strapi
+      .query('api::subscription-plan.subscription-plan')
+      .findMany({ limit: 1 });
+
+    if (existingPlans.length === 0) {
+      strapi.log.info('💳 Seeding subscription plans...');
+      for (const planData of subscriptionPlans) {
+        await strapi.entityService.create('api::subscription-plan.subscription-plan', {
+          data: {
+            ...planData,
+            slug: generateSlug(planData.name),
+            publishedAt: new Date(),
+          },
+        });
+      }
+      strapi.log.info(`✅ Created ${subscriptionPlans.length} subscription plans`);
+    } else {
+      strapi.log.info('ℹ️  Subscription plans already exist, skipping...');
     }
 
     // Create or get test user for advertisements

@@ -57,7 +57,7 @@
     "status": {
       "type": "enumeration",
       "enum": ["draft", "pending", "approved", "rejected", "expired"],
-      "default": "pending"
+      "default": "draft"
     },
     "isPremium": {
       "type": "boolean",
@@ -108,6 +108,17 @@
       "type": "relation",
       "relation": "oneToMany",
       "target": "api::report.report",
+      "mappedBy": "advertisement"
+    },
+    "subscriptionPlan": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::subscription-plan.subscription-plan"
+    },
+    "paymentRequest": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::payment-request.payment-request",
       "mappedBy": "advertisement"
     }
   }

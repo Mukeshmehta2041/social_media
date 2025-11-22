@@ -1,0 +1,54 @@
+{
+  "kind": "collectionType",
+  "collectionName": "user_subscriptions",
+  "info": {
+    "singularName": "user-subscription",
+    "pluralName": "user-subscriptions",
+    "displayName": "User Subscription",
+    "description": "User subscription tracking for post limits"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "required": true
+    },
+    "subscriptionPlan": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::subscription-plan.subscription-plan",
+      "required": true
+    },
+    "postsUsed": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "postsLimit": {
+      "type": "integer",
+      "required": true,
+      "min": 1
+    },
+    "startDate": {
+      "type": "datetime",
+      "required": true
+    },
+    "endDate": {
+      "type": "datetime",
+      "required": true
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "renewedAt": {
+      "type": "datetime"
+    }
+  }
+}
+

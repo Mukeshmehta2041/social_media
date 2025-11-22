@@ -5,6 +5,31 @@
 import { factories } from '@strapi/strapi';
 
 export default factories.createCoreController('api::advertisement.advertisement', ({ strapi }) => ({
+  async create(ctx) {
+    const { data } = ctx.request.body;
+    const user = ctx.state.user;
+
+    if (!user) {
+      return ctx.unauthorized('You must be authenticated to create an advertisement');
+    }
+
+    // Ensure status is draft for new ads
+    const adData = {
+      ...data,
+      status: 'draft',
+      user: user.id,
+    };
+
+    const entity = await strapi
+      .service('api::advertisement.advertisement')
+      .create({
+        data: adData,
+        populate: ['category', 'city', 'user', 'images'],
+      });
+
+    return { data: entity };
+  },
+
   async find(ctx) {
     const { query } = ctx;
 

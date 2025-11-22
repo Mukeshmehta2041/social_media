@@ -191,3 +191,66 @@ export interface ContactForm {
   updatedAt: string;
 }
 
+// Subscription Plan types
+export interface SubscriptionPlan {
+  id: number;
+  name: string;
+  slug: string;
+  duration: 'weekly' | 'monthly' | 'yearly';
+  postLimit: number;
+  price: number;
+  isActive: boolean;
+  features?: Record<string, unknown>;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Payment Request types
+export interface PaymentRequest {
+  id: number;
+  user: User;
+  advertisement?: Advertisement;
+  subscriptionPlan: SubscriptionPlan;
+  amount: number;
+  status: 'pending' | 'paid' | 'failed' | 'cancelled';
+  paymentMethod?: string;
+  transactionId?: string;
+  paymentProof?: Media;
+  adminNotes?: string;
+  paidAt?: string;
+  verifiedBy?: User;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// User Subscription types
+export interface UserSubscription {
+  id: number;
+  user: User;
+  subscriptionPlan: SubscriptionPlan;
+  postsUsed: number;
+  postsLimit: number;
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  renewedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Subscription Limit Check types
+export interface SubscriptionLimitCheck {
+  hasActiveSubscription: boolean;
+  canPost: boolean;
+  postsUsed: number;
+  postsLimit: number;
+  postsRemaining: number;
+  subscription?: {
+    id: number;
+    startDate: string;
+    endDate: string;
+    plan: SubscriptionPlan;
+  };
+}
+

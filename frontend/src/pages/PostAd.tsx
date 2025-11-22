@@ -7,7 +7,9 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import ImageUpload from '../components/forms/ImageUpload';
-import type { Category, City } from '../types';
+import PlanSelector from '../components/subscription/PlanSelector';
+import PaymentRequestModal from '../components/subscription/PaymentRequestModal';
+import type { Category, City, SubscriptionPlan, Advertisement, PaymentRequest } from '../types';
 
 const schema = yup.object({
   title: yup.string().required('Title is required').min(5, 'Title must be at least 5 characters').max(100, 'Title must be less than 100 characters'),
@@ -54,6 +56,9 @@ const PostAd = () => {
   const [images, setImages] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [createdAd, setCreatedAd] = useState<Advertisement | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const {
     register,
@@ -127,7 +132,7 @@ const PostAd = () => {
           contactPhone: data.contactPhone,
           contactEmail: data.contactEmail || '',
           whatsappNumber: data.whatsappNumber || data.contactPhone,
-          status: 'pending',
+          status: 'draft',
           images: uploadedImages,
         },
       };
@@ -135,8 +140,9 @@ const PostAd = () => {
       const response = await api.post('/advertisements', adData);
       return response.data;
     },
-    onSuccess: () => {
-      navigate('/dashboard');
+    onSuccess: (data) => {
+      setCreatedAd(data.data);
+      setStep(6); // Move to plan selection step
     },
     onError: (err: any) => {
       setError(err.response?.data?.error?.message || 'Failed to create advertisement');
@@ -149,16 +155,29 @@ const PostAd = () => {
       return;
     }
 
-    setError(null);
-    setLoading(true);
+    if (step === 5) {
+      // Submit the ad as draft
+      setError(null);
+      setLoading(true);
 
-    try {
-      await createAdMutation.mutateAsync(data);
-    } catch (err) {
-      // Error handled in mutation
-    } finally {
-      setLoading(false);
+      try {
+        await createAdMutation.mutateAsync(data);
+      } catch (err) {
+        // Error handled in mutation
+      } finally {
+        setLoading(false);
+      }
     }
+  };
+
+  const handlePlanSelect = (plan: SubscriptionPlan) => {
+    setSelectedPlan(plan);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = (paymentRequest: PaymentRequest) => {
+    setShowPaymentModal(false);
+    navigate('/dashboard', { state: { paymentRequestId: paymentRequest.id } });
   };
 
   const nextStep = () => {
@@ -183,7 +202,7 @@ const PostAd = () => {
       {/* Progress Steps */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
-          {[1, 2, 3, 4, 5].map((stepNum) => (
+          {[1, 2, 3, 4, 5, 6].map((stepNum) => (
             <div key={stepNum} className="flex items-center flex-1">
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= stepNum
@@ -193,7 +212,7 @@ const PostAd = () => {
               >
                 {stepNum}
               </div>
-              {stepNum < 5 && (
+              {stepNum < 6 && (
                 <div
                   className={`flex-1 h-1 mx-2 ${step > stepNum ? 'bg-indigo-600' : 'bg-gray-200'
                     }`}
@@ -208,6 +227,7 @@ const PostAd = () => {
           <span>Images</span>
           <span>Contact</span>
           <span>Review</span>
+          <span>Plan</span>
         </div>
       </div>
 
@@ -532,7 +552,7 @@ const PostAd = () => {
         )}
 
         {/* Step 5: Review & Submit */}
-        {step === 5 && (
+        {step === 5 && !createdAd && (
           <div className="space-y-6">
             <h2 className="text-2xl font-semibold mb-4">Review & Submit</h2>
             <div className="bg-gray-50 rounded-lg p-6 space-y-4">
@@ -631,35 +651,70 @@ const PostAd = () => {
           </div>
         )}
 
+        {/* Step 6: Plan Selection */}
+        {step === 6 && createdAd && (
+          <div className="space-y-6">
+            <h2 className="text-2xl font-semibold mb-4">Select a Subscription Plan</h2>
+            <p className="text-gray-600 mb-6">
+              Your advertisement has been saved as a draft. Please select a subscription plan to publish it.
+            </p>
+            <PlanSelector
+              onSelectPlan={handlePlanSelect}
+              selectedPlanId={selectedPlan?.id}
+            />
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Save for Later
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
-          <button
-            type="button"
-            onClick={prevStep}
-            disabled={step === 1}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-          {step < 5 ? (
+        {step < 6 && (
+          <div className="flex justify-between mt-8">
             <button
               type="button"
-              onClick={nextStep}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              onClick={prevStep}
+              disabled={step === 1}
+              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              Previous
             </button>
-          ) : (
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-            >
-              {loading ? 'Submitting...' : 'Submit Advertisement'}
-            </button>
-          )}
-        </div>
+            {step < 5 ? (
+              <button
+                type="button"
+                onClick={nextStep}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {loading ? 'Submitting...' : 'Submit Advertisement'}
+              </button>
+            )}
+          </div>
+        )}
       </form>
+
+      {/* Payment Request Modal */}
+      {showPaymentModal && selectedPlan && createdAd && (
+        <PaymentRequestModal
+          plan={selectedPlan}
+          advertisement={createdAd}
+          onClose={() => setShowPaymentModal(false)}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 };

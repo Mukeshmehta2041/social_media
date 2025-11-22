@@ -1,4 +1,5 @@
 import type { Core } from '@strapi/strapi';
+import { seedDatabase } from './scripts/seed';
 
 export default {
   /**
@@ -113,24 +114,52 @@ export default {
         ];
 
         for (const action of authenticatedPermissionActions) {
-          let permission = allAuthPermissions.find((p) => p.action === action);
+          try {
+            let permission = allAuthPermissions.find((p) => p.action === action);
 
-          if (!permission) {
-            permission = await strapi
-              .query('plugin::users-permissions.permission')
-              .create({
-                data: {
-                  action,
-                  role: authenticatedRole.id,
-                },
-              });
-          } else if (!permission.enabled) {
+            if (!permission) {
+              permission = await strapi
+                .query('plugin::users-permissions.permission')
+                .create({
+                  data: {
+                    action,
+                    role: authenticatedRole.id,
+                  },
+                });
+              strapi.log.info(`✅ Created permission: ${action}`);
+            } else if (!permission.enabled) {
+              await strapi
+                .query('plugin::users-permissions.permission')
+                .update({
+                  where: { id: permission.id },
+                  data: { enabled: true },
+                });
+              strapi.log.info(`✅ Enabled permission: ${action}`);
+            }
+          } catch (error: any) {
+            // Some permission actions might not exist (e.g., wrong format)
+            // Log but don't fail - this is expected for some plugin permissions
+            if (!error.message?.includes('already exists')) {
+              strapi.log.warn(`⚠️ Could not set permission ${action}: ${error.message}`);
+            }
+          }
+        }
+
+        // Enable all upload plugin permissions for authenticated users
+        // Filter permissions that contain 'upload' in the action name
+        const uploadPermissions = allAuthPermissions.filter((p) =>
+          p.action.includes('upload')
+        );
+
+        for (const uploadPermission of uploadPermissions) {
+          if (!uploadPermission.enabled) {
             await strapi
               .query('plugin::users-permissions.permission')
               .update({
-                where: { id: permission.id },
+                where: { id: uploadPermission.id },
                 data: { enabled: true },
               });
+            strapi.log.info(`✅ Enabled upload permission: ${uploadPermission.action}`);
           }
         }
 
@@ -140,5 +169,8 @@ export default {
       strapi.log.error('❌ Error setting up permissions:', error);
       strapi.log.error('Error details:', error?.message || 'Unknown error');
     }
+
+    // Seed database with initial data
+    await seedDatabase(strapi);
   },
 };

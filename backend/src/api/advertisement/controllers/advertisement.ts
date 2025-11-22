@@ -56,22 +56,49 @@ export default factories.createCoreController('api::advertisement.advertisement'
   async findOne(ctx) {
     const { id } = ctx.params;
 
+    // Build where clause
+    const where: any = {
+      id: parseInt(id) || id, // Try numeric ID first, fallback to string
+    };
+
+    // Only show approved and published ads for public users
+    const isAdmin = ctx.state.user && ctx.state.user.role?.type === 'admin';
+    if (!isAdmin) {
+      where.status = 'approved';
+      where.publishedAt = { $notNull: true };
+    }
+
+    // Use query builder to find the entity with filters
     const entity = await strapi
-      .service('api::advertisement.advertisement')
-      .findOne(id, {
+      .query('api::advertisement.advertisement')
+      .findOne({
+        where,
         populate: ['category', 'city', 'user', 'images'],
       });
 
-    // Increment view count
-    if (entity) {
-      await strapi
-        .service('api::advertisement.advertisement')
-        .update(id, {
-          data: { viewCount: (entity.viewCount || 0) + 1 },
-        });
+    // If entity not found, return not found
+    if (!entity) {
+      return ctx.notFound();
     }
 
-    return { data: entity };
+    // Increment view count
+    await strapi
+      .service('api::advertisement.advertisement')
+      .update(id, {
+        data: { viewCount: (entity.viewCount || 0) + 1 },
+      });
+
+    // Fetch updated entity with new view count
+    const updatedEntity = await strapi
+      .query('api::advertisement.advertisement')
+      .findOne({
+        where: {
+          id: parseInt(id) || id,
+        },
+        populate: ['category', 'city', 'user', 'images'],
+      });
+
+    return { data: updatedEntity };
   },
 
   async incrementView(ctx) {

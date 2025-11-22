@@ -6,30 +6,43 @@ interface ContactSectionProps {
 }
 
 const ContactSection = ({ ad }: ContactSectionProps) => {
+  // Use contactPhone, whatsappNumber, or user's phone as fallback
+  const phoneNumber = ad.contactPhone || ad.whatsappNumber || ad.user?.phone;
+  const email = ad.contactEmail || ad.user?.email;
+
   const handleWhatsApp = () => {
-    if (ad.contactPhone) {
+    if (phoneNumber) {
       const message = `Hi, I'm interested in your ad: ${ad.title}`;
-      const url = generateWhatsAppUrl(ad.contactPhone, message);
+      const url = generateWhatsAppUrl(phoneNumber, message);
       window.open(url, '_blank');
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // You could add a toast notification here
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Could add toast notification here
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
   };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 sticky top-4">
       <h2 className="text-xl font-semibold mb-4">Contact Seller</h2>
 
-      {ad.contactPhone && (
+      {phoneNumber ? (
         <div className="mb-4">
           <p className="text-sm text-gray-600 mb-2">Phone</p>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold">{ad.contactPhone}</span>
+            <a
+              href={`tel:${phoneNumber}`}
+              className="text-lg font-semibold text-indigo-600 hover:text-indigo-800"
+            >
+              {phoneNumber}
+            </a>
             <button
-              onClick={() => copyToClipboard(ad.contactPhone!)}
+              onClick={() => copyToClipboard(phoneNumber)}
               className="text-indigo-600 hover:text-indigo-700"
               title="Copy phone number"
             >
@@ -44,25 +57,30 @@ const ContactSection = ({ ad }: ContactSectionProps) => {
             Contact via WhatsApp
           </button>
         </div>
-      )}
+      ) : null}
 
-      {ad.contactEmail && (
+      {email ? (
         <div className="mb-4">
           <p className="text-sm text-gray-600 mb-2">Email</p>
           <div className="flex items-center gap-2">
-            <span className="text-lg">{ad.contactEmail}</span>
+            <a
+              href={`mailto:${email}`}
+              className="text-lg text-indigo-600 hover:text-indigo-800 break-all"
+            >
+              {email}
+            </a>
             <button
-              onClick={() => copyToClipboard(ad.contactEmail!)}
-              className="text-indigo-600 hover:text-indigo-700"
+              onClick={() => copyToClipboard(email)}
+              className="text-indigo-600 hover:text-indigo-700 flex-shrink-0"
               title="Copy email"
             >
               📋
             </button>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {!ad.contactPhone && !ad.contactEmail && (
+      {!phoneNumber && !email && (
         <p className="text-gray-500 text-sm">No contact information available</p>
       )}
     </div>

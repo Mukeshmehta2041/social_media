@@ -12,9 +12,13 @@ const AdDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [showReportModal, setShowReportModal] = useState(false);
 
-  const { data, isLoading } = useQuery<{ data: Advertisement }>({
+  const { data, isLoading, error } = useQuery<{ data: Advertisement }>({
     queryKey: ['ad', id],
-    queryFn: () => api.get(`/advertisements/${id}?populate=*`),
+    queryFn: async () => {
+      const response = await api.get(`/advertisements/${id}?populate=*`);
+      // Handle both response.data and direct response structures
+      return response.data;
+    },
     enabled: !!id,
   });
 
@@ -26,9 +30,21 @@ const AdDetail = () => {
     );
   }
 
-  const ad = data?.data;
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Error loading advertisement</h1>
+          <p className="text-gray-500">Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
 
-  if (!ad) {
+  // Handle different response structures
+  const ad: Advertisement | undefined = data?.data || (data as unknown as { data?: { data?: Advertisement } })?.data?.data || (data as unknown as Advertisement);
+
+  if (!ad || !ad.id) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
@@ -135,9 +151,25 @@ const AdDetail = () => {
               </div>
               <div className="border-t pt-4 flex items-center justify-between text-sm text-gray-500">
                 <div>
-                  <p>Posted: {new Date(ad.createdAt).toLocaleDateString()}</p>
-                  {ad.updatedAt !== ad.createdAt && (
-                    <p>Updated: {new Date(ad.updatedAt).toLocaleDateString()}</p>
+                  <p>
+                    Posted:{' '}
+                    {ad.createdAt
+                      ? new Date(ad.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })
+                      : 'N/A'}
+                  </p>
+                  {ad.updatedAt && ad.updatedAt !== ad.createdAt && (
+                    <p>
+                      Updated:{' '}
+                      {new Date(ad.updatedAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-4">

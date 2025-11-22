@@ -452,7 +452,7 @@ const EditAd = () => {
             Service Types (select all that apply)
           </label>
           <div className="grid grid-cols-2 gap-2">
-            {['Full Body Massage', 'Erotic Massage', 'Oil Massage', 'Nuru Massage', 'B2B Massage', 'Oral Services', 'Role Play', 'BDSM'].map((service) => (
+            {['Full Body Massage', 'Therapeutic Massage', 'Oil Massage', 'Swedish Massage', 'Deep Tissue Massage', 'Aromatherapy', 'Hot Stone Massage', 'Sports Massage'].map((service) => (
               <label key={service} className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"

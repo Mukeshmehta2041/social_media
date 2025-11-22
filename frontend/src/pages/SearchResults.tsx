@@ -1,22 +1,14 @@
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
-import { useAuthStore } from '../store/authStore';
-import type { Advertisement, ApiResponse, SearchFilters } from '../types';
+import type { Advertisement, ApiResponse } from '../types';
 import AdCard from '../components/ads/AdCard';
-import FilterSidebar from '../components/search/FilterSidebar';
 import SearchBar from '../components/search/SearchBar';
-import FrequentSearches from '../components/search/FrequentSearches';
 import SEOHead from '../components/seo/SEOHead';
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuthStore();
-  const queryClient = useQueryClient();
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [saveSearchName, setSaveSearchName] = useState('');
 
   const search = searchParams.get('q') || '';
   const category = searchParams.get('category') || '';
@@ -25,33 +17,6 @@ const SearchResults = () => {
   const maxPrice = searchParams.get('maxPrice') || '';
   const sort = searchParams.get('sort') || 'newest';
   const page = parseInt(searchParams.get('page') || '1');
-
-  const [filters, setFilters] = useState<{
-    category?: string;
-    city?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    sort?: string;
-  }>({
-    category: category || undefined,
-    city: city || undefined,
-    minPrice: minPrice || undefined,
-    maxPrice: maxPrice || undefined,
-    sort: sort || undefined,
-  });
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (search) params.append('q', search);
-    if (filters.category) params.append('category', filters.category);
-    if (filters.city) params.append('city', filters.city);
-    if (filters.minPrice) params.append('minPrice', filters.minPrice);
-    if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-    if (filters.sort) params.append('sort', filters.sort);
-    if (page > 1) params.append('page', page.toString());
-
-    navigate(`/search?${params.toString()}`, { replace: true });
-  }, [filters, search, page, navigate]);
 
   const { data, isLoading } = useQuery<ApiResponse<Advertisement[]>>({
     queryKey: ['search', search, category, city, minPrice, maxPrice, sort, page],
@@ -86,60 +51,6 @@ const SearchResults = () => {
     },
   });
 
-  const handleFilterChange = (newFilters: {
-    category?: string;
-    city?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    sort?: string;
-  }) => {
-    setFilters(newFilters);
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.delete('page'); // Reset to page 1 when filters change
-      return newParams;
-    });
-  };
-
-  const saveSearchMutation = useMutation({
-    mutationFn: async (name: string) => {
-      const searchQuery: SearchFilters = {};
-      if (search) searchQuery.q = search;
-      if (category) searchQuery.category = category;
-      if (city) searchQuery.city = city;
-      if (minPrice) searchQuery.minPrice = parseFloat(minPrice);
-      if (maxPrice) searchQuery.maxPrice = parseFloat(maxPrice);
-      if (sort) searchQuery.sort = sort;
-
-      await api.post('/saved-searches', {
-        data: {
-          name,
-          searchQuery,
-          notificationsEnabled: true,
-        },
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['saved-searches'] });
-      setShowSaveModal(false);
-      setSaveSearchName('');
-    },
-  });
-
-  const handleSaveSearch = () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-    setShowSaveModal(true);
-  };
-
-  const handleSaveSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (saveSearchName.trim()) {
-      saveSearchMutation.mutate(saveSearchName.trim());
-    }
-  };
 
   if (isLoading) {
     return (
@@ -152,170 +63,181 @@ const SearchResults = () => {
   const ads = data?.data || [];
   const pagination = data?.meta?.pagination;
 
+  const totalResults = pagination?.total || ads.length;
+  const currentPage = pagination?.page || page;
+  const totalPages = pagination?.pageCount || 1;
+  const startResult = totalResults > 0 ? ((currentPage - 1) * (pagination?.pageSize || 24)) + 1 : 0;
+  const endResult = Math.min(currentPage * (pagination?.pageSize || 24), totalResults);
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      // Show all pages if total pages is less than max visible
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+
+      if (currentPage > 3) {
+        pages.push('...');
+      }
+
+      // Show pages around current page
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (currentPage < totalPages - 2) {
+        pages.push('...');
+      }
+
+      // Always show last page
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('page', newPage.toString());
+      return newParams;
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
       <SEOHead
         title={`Search Results${search ? ` - ${search}` : ''}`}
         description={`Search for classified advertisements${search ? `: ${search}` : ''}. Filter by category, city, and price range.`}
       />
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Search Results</h1>
-          {isAuthenticated && (search || category || city || minPrice || maxPrice) && (
-            <button
-              onClick={handleSaveSearch}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-            >
-              <span>💾</span>
-              Save Search
-            </button>
-          )}
-        </div>
-
-        {/* Search Bar */}
-        <div className="mb-6">
-          <SearchBar
-            onSearch={(params) => {
-              const newParams = new URLSearchParams();
-              if (params.q) newParams.append('q', params.q);
-              if (params.city) newParams.append('city', params.city);
-              if (params.category) newParams.append('category', params.category);
-              navigate(`/search?${newParams.toString()}`);
-            }}
-          />
-        </div>
-
-        {/* Frequent Searches */}
-        <div className="mb-6">
-          <FrequentSearches
-            onSearchClick={(term) => {
-              const newParams = new URLSearchParams();
-              newParams.append('q', term);
-              navigate(`/search?${newParams.toString()}`);
-            }}
-          />
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Filter Sidebar */}
-          <div className="md:w-64 flex-shrink-0">
-            <FilterSidebar
-              onFilterChange={handleFilterChange}
-              currentFilters={filters}
+      <div className="min-h-screen bg-gray-50">
+        {/* Search Bar Section with Gray Background */}
+        <div className="bg-gray-100 py-6">
+          <div className="container mx-auto px-4">
+            <SearchBar
+              onSearch={(params) => {
+                const newParams = new URLSearchParams();
+                if (params.q) newParams.append('q', params.q);
+                if (params.city) newParams.append('city', params.city);
+                if (params.category) newParams.append('category', params.category);
+                newParams.delete('page'); // Reset to page 1 on new search
+                navigate(`/search?${newParams.toString()}`);
+              }}
             />
-          </div>
-
-          {/* Results */}
-          <div className="flex-1">
-            {ads.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-lg shadow-md">
-                <p className="text-gray-500 text-lg">No results found</p>
-                <p className="text-gray-400 mt-2">Try adjusting your search criteria</p>
+            {!isLoading && (
+              <div className="mt-4 text-sm text-gray-600">
+                Showing {startResult}-{endResult} of {totalResults} results
+                {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
               </div>
-            ) : (
-              <>
-                <div className="mb-4 text-sm text-gray-600">
-                  Showing {ads.length} result{ads.length !== 1 ? 's' : ''}
-                  {pagination && ` (Page ${pagination.page} of ${pagination.pageCount})`}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                  {ads.map((ad) => (
-                    <AdCard key={ad.id} ad={ad} />
-                  ))}
-                </div>
-
-                {pagination && pagination.pageCount > 1 && (
-                  <div className="flex justify-center gap-2">
-                    {page > 1 && (
-                      <button
-                        onClick={() => {
-                          setSearchParams((prev) => {
-                            const newParams = new URLSearchParams(prev);
-                            newParams.set('page', (page - 1).toString());
-                            return newParams;
-                          });
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-                      >
-                        Previous
-                      </button>
-                    )}
-                    <span className="px-4 py-2 flex items-center">
-                      Page {pagination.page} of {pagination.pageCount}
-                    </span>
-                    {page < pagination.pageCount && (
-                      <button
-                        onClick={() => {
-                          setSearchParams((prev) => {
-                            const newParams = new URLSearchParams(prev);
-                            newParams.set('page', (page + 1).toString());
-                            return newParams;
-                          });
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
-                      >
-                        Next
-                      </button>
-                    )}
-                  </div>
-                )}
-              </>
             )}
           </div>
         </div>
 
-        {/* Save Search Modal */}
-        {showSaveModal && (
-          <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-              <div
-                className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
-                onClick={() => setShowSaveModal(false)}
-              ></div>
-              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Save Search</h3>
-                  <form onSubmit={handleSaveSearchSubmit}>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Search Name
-                      </label>
-                      <input
-                        type="text"
-                        value={saveSearchName}
-                        onChange={(e) => setSaveSearchName(e.target.value)}
-                        placeholder="e.g., Mumbai Call Girls"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        required
-                      />
-                    </div>
-                    <div className="flex items-center justify-end gap-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowSaveModal(false);
-                          setSaveSearchName('');
-                        }}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={saveSearchMutation.isPending || !saveSearchName.trim()}
-                        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 disabled:opacity-50"
-                      >
-                        {saveSearchMutation.isPending ? 'Saving...' : 'Save'}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
+        {/* Main Content */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900">Search Results</h1>
           </div>
-        )}
+
+          {/* Results */}
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+              <p className="text-gray-600">Loading results...</p>
+            </div>
+          ) : ads.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-lg shadow-sm">
+              <div className="text-6xl mb-4">🔍</div>
+              <p className="text-gray-500 text-lg font-medium">No results found</p>
+              <p className="text-gray-400 mt-2">Try adjusting your search criteria or browse all listings</p>
+              <button
+                onClick={() => navigate('/search')}
+                className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              >
+                Clear Filters
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-4 mb-8">
+                {ads.map((ad) => (
+                  <AdCard key={ad.id} ad={ad} />
+                ))}
+              </div>
+
+              {/* Enhanced Pagination */}
+              {pagination && totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-gray-200">
+                  <div className="text-sm text-gray-600">
+                    Showing {startResult}-{endResult} of {totalResults} results
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Previous Button */}
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className={`px-4 py-2 rounded-lg border transition ${currentPage === 1
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-indigo-500'
+                        }`}
+                    >
+                      Previous
+                    </button>
+
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-1">
+                      {getPageNumbers().map((pageNum, index) => {
+                        if (pageNum === '...') {
+                          return (
+                            <span key={`ellipsis-${index}`} className="px-2 text-gray-400">
+                              ...
+                            </span>
+                          );
+                        }
+                        const pageNumber = pageNum as number;
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => handlePageChange(pageNumber)}
+                            className={`min-w-[40px] px-3 py-2 rounded-lg border transition ${currentPage === pageNumber
+                              ? 'bg-indigo-600 text-white border-indigo-600 font-semibold'
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-indigo-500'
+                              }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className={`px-4 py-2 rounded-lg border transition ${currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-indigo-500'
+                        }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </>
   );

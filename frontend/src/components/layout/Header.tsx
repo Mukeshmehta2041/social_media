@@ -130,9 +130,6 @@ const Header = () => {
                 Post Ad
               </Link>
             )}
-            <Link to="/contact" className="text-gray-700 hover:text-indigo-600">
-              Contact
-            </Link>
           </nav>
 
           {/* Desktop User Menu */}
@@ -342,13 +339,6 @@ const Header = () => {
                   </Link>
                 </>
               )}
-              <Link
-                to="/contact"
-                className="text-gray-700 hover:text-indigo-600 px-2"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Contact
-              </Link>
             </nav>
           </div>
         )}

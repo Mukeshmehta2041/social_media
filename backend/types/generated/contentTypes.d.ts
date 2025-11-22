@@ -443,6 +443,8 @@ export interface ApiAdvertisementAdvertisement
     draftAndPublish: true;
   };
   attributes: {
+    age: Schema.Attribute.Integer;
+    availability: Schema.Attribute.String;
     category: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
     city: Schema.Attribute.Relation<'manyToOne', 'api::city.city'>;
     contactEmail: Schema.Attribute.Email;
@@ -461,8 +463,15 @@ export interface ApiAdvertisementAdvertisement
     > &
       Schema.Attribute.Private;
     price: Schema.Attribute.Decimal;
+    priceFullNight: Schema.Attribute.Decimal;
+    priceOneHour: Schema.Attribute.Decimal;
+    priceThreeHour: Schema.Attribute.Decimal;
+    priceTwoHour: Schema.Attribute.Decimal;
     publishedAt: Schema.Attribute.DateTime;
     reports: Schema.Attribute.Relation<'oneToMany', 'api::report.report'>;
+    serviceLocations: Schema.Attribute.Enumeration<['home', 'hotel', 'both']> &
+      Schema.Attribute.DefaultTo<'both'>;
+    serviceTypes: Schema.Attribute.JSON;
     slug: Schema.Attribute.UID<'title'> & Schema.Attribute.Required;
     status: Schema.Attribute.Enumeration<
       ['draft', 'pending', 'approved', 'rejected', 'expired']

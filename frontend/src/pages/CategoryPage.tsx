@@ -44,7 +44,7 @@ const CategoryPage = () => {
           <p className="text-gray-500 text-lg">No listings found in this category</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           {ads.map((ad) => (
             <AdCard key={ad.id} ad={ad} />
           ))}

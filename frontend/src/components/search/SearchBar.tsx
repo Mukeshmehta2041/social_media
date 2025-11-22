@@ -62,7 +62,7 @@ const SearchBar = ({ variant = 'default', onSearch }: SearchBarProps) => {
         : 'bg-gray-50 rounded-lg p-4'
         }`}
     >
-      <div className={`flex flex-col ${isHero ? 'md:flex-row' : ''} gap-4`}>
+      <div className="flex flex-col md:flex-row gap-4">
         {/* Search Input */}
         <div className="flex-1">
           <input
@@ -75,7 +75,7 @@ const SearchBar = ({ variant = 'default', onSearch }: SearchBarProps) => {
         </div>
 
         {/* City Select */}
-        <div className={isHero ? 'md:w-48' : 'w-full md:w-48'}>
+        <div className="w-full md:w-48">
           <select
             value={selectedCity}
             onChange={(e) => setSelectedCity(e.target.value)}
@@ -91,7 +91,7 @@ const SearchBar = ({ variant = 'default', onSearch }: SearchBarProps) => {
         </div>
 
         {/* Category Select */}
-        <div className={isHero ? 'md:w-48' : 'w-full md:w-48'}>
+        <div className="w-full md:w-48">
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
@@ -109,10 +109,7 @@ const SearchBar = ({ variant = 'default', onSearch }: SearchBarProps) => {
         {/* Search Button */}
         <button
           type="submit"
-          className={`${isHero
-            ? 'bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-lg font-semibold transition'
-            : 'bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition'
-            }`}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 md:px-8 py-3 rounded-lg font-semibold transition whitespace-nowrap"
         >
           Search
         </button>

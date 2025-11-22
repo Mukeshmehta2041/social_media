@@ -20,7 +20,6 @@ const EditAd = lazy(() => import('../pages/EditAd'));
 const Dashboard = lazy(() => import('../pages/Dashboard'));
 const Profile = lazy(() => import('../pages/Profile'));
 const Settings = lazy(() => import('../pages/Settings'));
-const Contact = lazy(() => import('../pages/Contact'));
 const About = lazy(() => import('../pages/About'));
 const Terms = lazy(() => import('../pages/Terms'));
 const Privacy = lazy(() => import('../pages/Privacy'));
@@ -182,14 +181,6 @@ const router = createBrowserRouter([
               <Settings />
             </LazyWrapper>
           </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'contact',
-        element: (
-          <LazyWrapper>
-            <Contact />
-          </LazyWrapper>
         ),
       },
       {

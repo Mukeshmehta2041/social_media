@@ -6,16 +6,14 @@ interface FrequentSearchesProps {
 const FrequentSearches = ({ onSearchClick }: FrequentSearchesProps) => {
   // Common search terms - can be made dynamic later
   const frequentSearches = [
-    'Bdsm',
-    'XNXX',
-    'XXX Sexy Video',
     'Massage',
     'Independent',
     'VIP',
-    'College Girls',
-    'Russian',
-    'Housewife',
-    'MILF',
+    'Professional',
+    'Verified',
+    'Available',
+    'Home Service',
+    'Hotel Service',
   ];
 
   const handleClick = (term: string) => {

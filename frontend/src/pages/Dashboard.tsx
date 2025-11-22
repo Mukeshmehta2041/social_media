@@ -4,12 +4,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { generateWhatsAppUrl } from '../utils/whatsapp';
-import type { Advertisement, ApiResponse } from '../types';
+import SavedSearches from '../components/search/SavedSearches';
+import type { Advertisement, ApiResponse, SavedSearch, SearchFilters } from '../types';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
   const queryClient = useQueryClient();
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
 
   // Fetch user's advertisements
   const { data: adsData, isLoading } = useQuery<ApiResponse<Advertisement[]>>({
@@ -31,12 +39,15 @@ const Dashboard = () => {
     enabled: isAuthenticated && !!user,
   });
 
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
+  // Fetch saved searches
+  const { data: savedSearchesData } = useQuery<ApiResponse<SavedSearch[]>>({
+    queryKey: ['saved-searches', user?.id],
+    queryFn: async () => {
+      const response = await api.get('/saved-searches?populate=*&sort=createdAt:desc');
+      return response.data;
+    },
+    enabled: isAuthenticated && !!user,
+  });
 
   const deleteAdMutation = useMutation({
     mutationFn: async (id: number) => {
@@ -77,6 +88,19 @@ const Dashboard = () => {
   const activeAds = ads.filter((ad) => ad.status === 'approved').length;
   const pendingAds = ads.filter((ad) => ad.status === 'pending').length;
   const totalViews = ads.reduce((sum, ad) => sum + (ad.viewCount || 0), 0);
+  const savedSearches = savedSearchesData?.data || [];
+  const savedSearchesCount = savedSearches.length;
+
+  const handleSelectSavedSearch = (searchQuery: SearchFilters) => {
+    const params = new URLSearchParams();
+    if (searchQuery.q) params.append('q', String(searchQuery.q));
+    if (searchQuery.category) params.append('category', String(searchQuery.category));
+    if (searchQuery.city) params.append('city', String(searchQuery.city));
+    if (searchQuery.minPrice) params.append('minPrice', String(searchQuery.minPrice));
+    if (searchQuery.maxPrice) params.append('maxPrice', String(searchQuery.maxPrice));
+    if (searchQuery.sort) params.append('sort', String(searchQuery.sort));
+    navigate(`/search?${params.toString()}`);
+  };
 
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
@@ -212,6 +236,30 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600 text-sm">Saved Searches</p>
+              <p className="text-3xl font-bold text-purple-600">{savedSearchesCount}</p>
+            </div>
+            <div className="bg-purple-100 rounded-full p-3">
+              <svg
+                className="w-8 h-8 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* My Ads Section */}
@@ -308,6 +356,11 @@ const Dashboard = () => {
             </table>
           </div>
         )}
+      </div>
+
+      {/* Saved Searches Section */}
+      <div className="mt-8">
+        <SavedSearches onSelectSearch={handleSelectSavedSearch} />
       </div>
     </div>
   );

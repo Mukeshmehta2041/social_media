@@ -36,7 +36,38 @@ social_media/
 - PostgreSQL (for production) or SQLite (for development)
 - npm or yarn
 
-### Backend Setup
+### Quick Start (Run Both Apps Together)
+
+1. Install root dependencies:
+```bash
+npm install
+```
+
+2. Install all dependencies (backend + frontend):
+```bash
+npm run install:all
+```
+
+3. Set up environment variables:
+   - Backend: Create `backend/.env` file (see Environment Variables section)
+   - Frontend: Create `frontend/.env` file with `VITE_API_URL=http://localhost:1337/api`
+
+4. Run both applications simultaneously:
+```bash
+npm run dev
+```
+
+This will start:
+- **Backend** (Strapi) at `http://localhost:1337`
+- **Frontend** (React) at `http://localhost:5173`
+
+Logs from both applications will be displayed with colored prefixes:
+- `[BACKEND]` - Strapi backend logs (blue)
+- `[FRONTEND]` - Vite frontend logs (green)
+
+### Individual Setup
+
+#### Backend Setup
 
 1. Navigate to the backend directory:
 ```bash
@@ -70,7 +101,7 @@ npm run develop
    - Saved Search
    - Contact Form
 
-### Frontend Setup
+#### Frontend Setup
 
 1. Navigate to the frontend directory:
 ```bash
@@ -143,16 +174,23 @@ VITE_API_URL=http://localhost:1337/api
 
 ## Development
 
-### Backend
+### Run Both Applications
 
-- Development: `npm run develop`
-- Production: `npm run build && npm start`
+- **Development (both apps)**: `npm run dev` (from root directory)
+- **Backend only**: `cd backend && npm run develop`
+- **Frontend only**: `cd frontend && npm run dev`
 
-### Frontend
+### Build
 
-- Development: `npm run dev`
-- Build: `npm run build`
-- Preview: `npm run preview`
+- **Build both**: `npm run build` (from root directory)
+- **Backend only**: `cd backend && npm run build`
+- **Frontend only**: `cd frontend && npm run build`
+
+### Production
+
+- **Start both**: `npm run start` (from root directory)
+- **Backend only**: `cd backend && npm run start`
+- **Frontend only**: `cd frontend && npm run preview`
 
 ## Deployment
 

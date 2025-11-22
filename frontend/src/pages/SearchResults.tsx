@@ -1,8 +1,9 @@
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import type { Advertisement, ApiResponse } from '../types';
+import { useAuthStore } from '../store/authStore';
+import type { Advertisement, ApiResponse, SearchFilters } from '../types';
 import AdCard from '../components/ads/AdCard';
 import FilterSidebar from '../components/search/FilterSidebar';
 import SearchBar from '../components/search/SearchBar';
@@ -11,6 +12,11 @@ import SEOHead from '../components/seo/SEOHead';
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuthStore();
+  const queryClient = useQueryClient();
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveSearchName, setSaveSearchName] = useState('');
+  
   const search = searchParams.get('q') || '';
   const category = searchParams.get('category') || '';
   const city = searchParams.get('city') || '';
@@ -94,6 +100,46 @@ const SearchResults = () => {
     });
   };
 
+  const saveSearchMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const searchQuery: SearchFilters = {};
+      if (search) searchQuery.q = search;
+      if (category) searchQuery.category = category;
+      if (city) searchQuery.city = city;
+      if (minPrice) searchQuery.minPrice = parseFloat(minPrice);
+      if (maxPrice) searchQuery.maxPrice = parseFloat(maxPrice);
+      if (sort) searchQuery.sort = sort;
+
+      await api.post('/saved-searches', {
+        data: {
+          name,
+          searchQuery,
+          notificationsEnabled: true,
+        },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['saved-searches'] });
+      setShowSaveModal(false);
+      setSaveSearchName('');
+    },
+  });
+
+  const handleSaveSearch = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    setShowSaveModal(true);
+  };
+
+  const handleSaveSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (saveSearchName.trim()) {
+      saveSearchMutation.mutate(saveSearchName.trim());
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -112,7 +158,18 @@ const SearchResults = () => {
         description={`Search for classified advertisements${search ? `: ${search}` : ''}. Filter by category, city, and price range.`}
       />
       <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Search Results</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Search Results</h1>
+        {isAuthenticated && (search || category || city || minPrice || maxPrice) && (
+          <button
+            onClick={handleSaveSearch}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+          >
+            <span>💾</span>
+            Save Search
+          </button>
+        )}
+      </div>
 
       {/* Search Bar */}
       <div className="mb-6">
@@ -196,6 +253,57 @@ const SearchResults = () => {
           )}
         </div>
       </div>
+
+      {/* Save Search Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+              onClick={() => setShowSaveModal(false)}
+            ></div>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Save Search</h3>
+                <form onSubmit={handleSaveSearchSubmit}>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Search Name
+                    </label>
+                    <input
+                      type="text"
+                      value={saveSearchName}
+                      onChange={(e) => setSaveSearchName(e.target.value)}
+                      placeholder="e.g., Mumbai Call Girls"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                      required
+                    />
+                  </div>
+                  <div className="flex items-center justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSaveModal(false);
+                        setSaveSearchName('');
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saveSearchMutation.isPending || !saveSearchName.trim()}
+                      className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                    >
+                      {saveSearchMutation.isPending ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </>
   );

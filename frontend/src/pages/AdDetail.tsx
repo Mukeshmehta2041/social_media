@@ -1,13 +1,16 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import type { Advertisement } from '../types';
 import ImageGallery from '../components/ads/ImageGallery';
 import ContactSection from '../components/ads/ContactSection';
+import ReportModal from '../components/ads/ReportModal';
 import SEOHead from '../components/seo/SEOHead';
 
 const AdDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const { data, isLoading } = useQuery<{ data: Advertisement }>({
     queryKey: ['ad', id],
@@ -137,12 +140,21 @@ const AdDetail = () => {
                     <p>Updated: {new Date(ad.updatedAt).toLocaleDateString()}</p>
                   )}
                 </div>
-                {ad.viewCount > 0 && (
-                  <p className="flex items-center gap-1">
-                    <span>👁️</span>
-                    {ad.viewCount} views
-                  </p>
-                )}
+                <div className="flex items-center gap-4">
+                  {ad.viewCount > 0 && (
+                    <p className="flex items-center gap-1">
+                      <span>👁️</span>
+                      {ad.viewCount} views
+                    </p>
+                  )}
+                  <button
+                    onClick={() => setShowReportModal(true)}
+                    className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center gap-1"
+                  >
+                    <span>🚩</span>
+                    Report
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -151,6 +163,12 @@ const AdDetail = () => {
           </div>
         </div>
       </div>
+      <ReportModal
+        adId={ad.id}
+        adTitle={ad.title}
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+      />
     </>
   );
 };

@@ -1,26 +1,44 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
-import Home from '../pages/Home';
-import SearchResults from '../pages/SearchResults';
-import CityPage from '../pages/CityPage';
-import CategoryPage from '../pages/CategoryPage';
-import CityCategoryPage from '../pages/CityCategoryPage';
-import AdDetail from '../pages/AdDetail';
-import Login from '../pages/auth/Login';
-import Register from '../pages/auth/Register';
-import ForgotPassword from '../pages/auth/ForgotPassword';
-import ResetPassword from '../pages/auth/ResetPassword';
-import PostAd from '../pages/PostAd';
-import EditAd from '../pages/EditAd';
-import Dashboard from '../pages/Dashboard';
-import Profile from '../pages/Profile';
-import Settings from '../pages/Settings';
-import Contact from '../pages/Contact';
-import About from '../pages/About';
-import Terms from '../pages/Terms';
-import Privacy from '../pages/Privacy';
-import Help from '../pages/Help';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
+
+// Lazy load pages for code splitting
+const Home = lazy(() => import('../pages/Home'));
+const SearchResults = lazy(() => import('../pages/SearchResults'));
+const CityPage = lazy(() => import('../pages/CityPage'));
+const CategoryPage = lazy(() => import('../pages/CategoryPage'));
+const CityCategoryPage = lazy(() => import('../pages/CityCategoryPage'));
+const AdDetail = lazy(() => import('../pages/AdDetail'));
+const Login = lazy(() => import('../pages/auth/Login'));
+const Register = lazy(() => import('../pages/auth/Register'));
+const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('../pages/auth/ResetPassword'));
+const PostAd = lazy(() => import('../pages/PostAd'));
+const EditAd = lazy(() => import('../pages/EditAd'));
+const Dashboard = lazy(() => import('../pages/Dashboard'));
+const Profile = lazy(() => import('../pages/Profile'));
+const Settings = lazy(() => import('../pages/Settings'));
+const Contact = lazy(() => import('../pages/Contact'));
+const About = lazy(() => import('../pages/About'));
+const Terms = lazy(() => import('../pages/Terms'));
+const Privacy = lazy(() => import('../pages/Privacy'));
+const Help = lazy(() => import('../pages/Help'));
+
+// Loading component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="text-center">
+      <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+      <p className="text-gray-600">Loading...</p>
+    </div>
+  </div>
+);
+
+// Wrapper component for Suspense
+const LazyWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<PageLoader />}>{children}</Suspense>
+);
 
 const router = createBrowserRouter([
   {
@@ -29,49 +47,91 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />,
+        element: (
+          <LazyWrapper>
+            <Home />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'search',
-        element: <SearchResults />,
+        element: (
+          <LazyWrapper>
+            <SearchResults />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'call-girls/:city',
-        element: <CityPage />,
+        element: (
+          <LazyWrapper>
+            <CityPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'call-girls/:city/:category',
-        element: <CityCategoryPage />,
+        element: (
+          <LazyWrapper>
+            <CityCategoryPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'category/:slug',
-        element: <CategoryPage />,
+        element: (
+          <LazyWrapper>
+            <CategoryPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'ad/:id',
-        element: <AdDetail />,
+        element: (
+          <LazyWrapper>
+            <AdDetail />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'login',
-        element: <Login />,
+        element: (
+          <LazyWrapper>
+            <Login />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'register',
-        element: <Register />,
+        element: (
+          <LazyWrapper>
+            <Register />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'forgot-password',
-        element: <ForgotPassword />,
+        element: (
+          <LazyWrapper>
+            <ForgotPassword />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'reset-password/:token',
-        element: <ResetPassword />,
+        element: (
+          <LazyWrapper>
+            <ResetPassword />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'post-ad',
         element: (
           <ProtectedRoute>
-            <PostAd />
+            <LazyWrapper>
+              <PostAd />
+            </LazyWrapper>
           </ProtectedRoute>
         ),
       },
@@ -79,7 +139,9 @@ const router = createBrowserRouter([
         path: 'edit-ad/:id',
         element: (
           <ProtectedRoute>
-            <EditAd />
+            <LazyWrapper>
+              <EditAd />
+            </LazyWrapper>
           </ProtectedRoute>
         ),
       },
@@ -87,7 +149,9 @@ const router = createBrowserRouter([
         path: 'dashboard',
         element: (
           <ProtectedRoute>
-            <Dashboard />
+            <LazyWrapper>
+              <Dashboard />
+            </LazyWrapper>
           </ProtectedRoute>
         ),
       },
@@ -95,7 +159,9 @@ const router = createBrowserRouter([
         path: 'profile',
         element: (
           <ProtectedRoute>
-            <Profile />
+            <LazyWrapper>
+              <Profile />
+            </LazyWrapper>
           </ProtectedRoute>
         ),
       },
@@ -103,29 +169,51 @@ const router = createBrowserRouter([
         path: 'settings',
         element: (
           <ProtectedRoute>
-            <Settings />
+            <LazyWrapper>
+              <Settings />
+            </LazyWrapper>
           </ProtectedRoute>
         ),
       },
       {
         path: 'contact',
-        element: <Contact />,
+        element: (
+          <LazyWrapper>
+            <Contact />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'about',
-        element: <About />,
+        element: (
+          <LazyWrapper>
+            <About />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'terms',
-        element: <Terms />,
+        element: (
+          <LazyWrapper>
+            <Terms />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'privacy',
-        element: <Privacy />,
+        element: (
+          <LazyWrapper>
+            <Privacy />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'help',
-        element: <Help />,
+        element: (
+          <LazyWrapper>
+            <Help />
+          </LazyWrapper>
+        ),
       },
     ],
   },

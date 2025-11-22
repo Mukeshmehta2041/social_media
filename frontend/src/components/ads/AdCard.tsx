@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Advertisement } from '../../types';
 
@@ -6,6 +7,9 @@ interface AdCardProps {
 }
 
 const AdCard = ({ ad }: AdCardProps) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
   const imageUrl = ad.images && ad.images.length > 0
     ? `${import.meta.env.VITE_API_URL || 'http://localhost:1337'}${ad.images[0].url}`
     : '/placeholder-image.jpg';
@@ -16,11 +20,21 @@ const AdCard = ({ ad }: AdCardProps) => {
       className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
     >
       <div className="relative h-48 bg-gray-200">
+        {!imageLoaded && !imageError && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="animate-pulse bg-gray-300 w-full h-full" />
+          </div>
+        )}
         <img
           src={imageUrl}
           alt={ad.title}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+          loading="lazy"
+          onLoad={() => setImageLoaded(true)}
           onError={(e) => {
+            setImageError(true);
+            setImageLoaded(true);
             (e.target as HTMLImageElement).src = '/placeholder-image.jpg';
           }}
         />

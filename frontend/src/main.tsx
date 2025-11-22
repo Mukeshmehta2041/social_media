@@ -10,12 +10,14 @@ import './index.css'
 // Initialize auth store
 useAuthStore.getState().init()
 
-// Create React Query client
+// Create React Query client with optimized caching
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
     },
   },
 })

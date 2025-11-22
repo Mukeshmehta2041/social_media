@@ -5,6 +5,11 @@ export interface User {
   email: string;
   confirmed: boolean;
   blocked: boolean;
+  role?: {
+    id: number;
+    name: string;
+    type: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -25,15 +30,17 @@ export interface UserProfile {
 export interface Advertisement {
   id: number;
   title: string;
-  description: string;
+  description: string | { [key: string]: any };
   price?: number;
   category?: Category;
   city?: City;
-  owner?: User;
+  user?: User;
+  owner?: User; // Alias for user
   status: 'draft' | 'pending' | 'approved' | 'rejected' | 'expired';
   isPremium: boolean;
   contactPhone?: string;
   contactEmail?: string;
+  whatsappNumber?: string;
   viewCount: number;
   expiresAt?: string;
   images?: Media[];

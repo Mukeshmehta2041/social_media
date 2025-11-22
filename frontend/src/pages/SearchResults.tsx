@@ -6,6 +6,7 @@ import type { Advertisement, ApiResponse } from '../types';
 import AdCard from '../components/ads/AdCard';
 import FilterSidebar from '../components/search/FilterSidebar';
 import SearchBar from '../components/search/SearchBar';
+import SEOHead from '../components/seo/SEOHead';
 
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -105,7 +106,12 @@ const SearchResults = () => {
   const pagination = data?.meta?.pagination;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+      <SEOHead
+        title={`Search Results${search ? ` - ${search}` : ''}`}
+        description={`Search for classified advertisements${search ? `: ${search}` : ''}. Filter by category, city, and price range.`}
+      />
+      <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Search Results</h1>
 
       {/* Search Bar */}
@@ -191,6 +197,7 @@ const SearchResults = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

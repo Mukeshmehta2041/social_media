@@ -40,6 +40,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
             alt={mainImage.alternativeText || 'Advertisement image'}
             className="w-full h-full object-cover"
             loading="lazy"
+            decoding="async"
           />
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all flex items-center justify-center">
             <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity">

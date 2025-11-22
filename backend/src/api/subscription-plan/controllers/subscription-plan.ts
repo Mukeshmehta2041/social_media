@@ -1,6 +1,6 @@
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreController('api::subscription-plan.subscription-plan', ({ strapi }) => ({
+export default factories.createCoreController('api::subscription-plan.subscription-plan' as any, ({ strapi }) => ({
   async find(ctx) {
     const { query } = ctx;
 

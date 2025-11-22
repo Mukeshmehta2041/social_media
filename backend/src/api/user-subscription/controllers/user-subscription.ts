@@ -1,6 +1,6 @@
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreController('api::user-subscription.user-subscription', ({ strapi }) => ({
+export default factories.createCoreController('api::user-subscription.user-subscription' as any, ({ strapi }) => ({
   async find(ctx) {
     const user = ctx.state.user;
 

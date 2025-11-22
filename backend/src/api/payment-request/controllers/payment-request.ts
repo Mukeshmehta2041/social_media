@@ -1,6 +1,6 @@
 import { factories } from '@strapi/strapi';
 
-export default factories.createCoreController('api::payment-request.payment-request', ({ strapi }) => ({
+export default factories.createCoreController('api::payment-request.payment-request' as any, ({ strapi }) => ({
   async create(ctx) {
     const { data } = ctx.request.body;
     const user = ctx.state.user;

@@ -281,7 +281,7 @@ export async function seedDatabase(strapi: Core.Strapi) {
     if (existingPlans.length === 0) {
       strapi.log.info('💳 Seeding subscription plans...');
       for (const planData of subscriptionPlans) {
-        await strapi.entityService.create('api::subscription-plan.subscription-plan', {
+        await strapi.entityService.create('api::subscription-plan.subscription-plan' as any, {
           data: {
             ...planData,
             slug: generateSlug(planData.name),

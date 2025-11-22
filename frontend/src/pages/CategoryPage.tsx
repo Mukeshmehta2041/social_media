@@ -9,18 +9,24 @@ const CategoryPage = () => {
 
   const { data: categoryData } = useQuery<ApiResponse<Category[]>>({
     queryKey: ['category', slug],
-    queryFn: () => api.get(`/categories?filters[slug][$eq]=${slug}`),
+    queryFn: async () => {
+      const response = await api.get(`/categories?filters[slug][$eq]=${slug}`);
+      return response.data;
+    },
     enabled: !!slug,
   });
 
   const { data: adsData } = useQuery<ApiResponse<Advertisement[]>>({
     queryKey: ['category-ads', slug],
-    queryFn: () => api.get(`/advertisements?filters[category][slug][$eq]=${slug}&filters[status][$eq]=approved`),
+    queryFn: async () => {
+      const response = await api.get(`/advertisements?filters[category][slug][$eq]=${slug}&filters[status][$eq]=approved&populate=category,city,images`);
+      return response.data;
+    },
     enabled: !!slug,
   });
 
   const category = categoryData?.data?.[0];
-  const ads = adsData?.data || [];
+  const ads = Array.isArray(adsData?.data) ? adsData.data : [];
 
   return (
     <div className="container mx-auto px-4 py-8">

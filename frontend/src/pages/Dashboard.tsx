@@ -83,12 +83,12 @@ const Dashboard = () => {
     );
   }
 
-  const ads = adsData?.data || [];
+  const ads = Array.isArray(adsData?.data) ? adsData.data : [];
   const totalAds = ads.length;
   const activeAds = ads.filter((ad) => ad.status === 'approved').length;
   const pendingAds = ads.filter((ad) => ad.status === 'pending').length;
   const totalViews = ads.reduce((sum, ad) => sum + (ad.viewCount || 0), 0);
-  const savedSearches = savedSearchesData?.data || [];
+  const savedSearches = Array.isArray(savedSearchesData?.data) ? savedSearchesData.data : [];
   const savedSearchesCount = savedSearches.length;
 
   const handleSelectSavedSearch = (searchQuery: SearchFilters) => {

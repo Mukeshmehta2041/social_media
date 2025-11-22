@@ -9,18 +9,20 @@ const CityCategoryPage = () => {
 
   const { data: adsData } = useQuery<ApiResponse<Advertisement[]>>({
     queryKey: ['city-category-ads', city, category],
-    queryFn: () => {
+    queryFn: async () => {
       const params = new URLSearchParams({
         'filters[status][$eq]': 'approved',
       });
       if (city) params.append('filters[city][slug][$eq]', city);
       if (category) params.append('filters[category][slug][$eq]', category);
-      return api.get(`/advertisements?${params.toString()}`);
+      params.append('populate', 'category,city,images');
+      const response = await api.get(`/advertisements?${params.toString()}`);
+      return response.data;
     },
     enabled: !!city,
   });
 
-  const ads = adsData?.data || [];
+  const ads = Array.isArray(adsData?.data) ? adsData.data : [];
 
   return (
     <div className="container mx-auto px-4 py-8">

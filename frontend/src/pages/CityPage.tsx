@@ -9,18 +9,24 @@ const CityPage = () => {
 
   const { data: cityData } = useQuery<ApiResponse<City[]>>({
     queryKey: ['city', city],
-    queryFn: () => api.get(`/cities?filters[slug][$eq]=${city}`),
+    queryFn: async () => {
+      const response = await api.get(`/cities?filters[slug][$eq]=${city}`);
+      return response.data;
+    },
     enabled: !!city,
   });
 
   const { data: adsData } = useQuery<ApiResponse<Advertisement[]>>({
     queryKey: ['city-ads', city],
-    queryFn: () => api.get(`/advertisements?filters[city][slug][$eq]=${city}&filters[status][$eq]=approved`),
+    queryFn: async () => {
+      const response = await api.get(`/advertisements?filters[city][slug][$eq]=${city}&filters[status][$eq]=approved&populate=category,city,images`);
+      return response.data;
+    },
     enabled: !!city,
   });
 
   const cityInfo = cityData?.data?.[0];
-  const ads = adsData?.data || [];
+  const ads = Array.isArray(adsData?.data) ? adsData.data : [];
 
   return (
     <div className="container mx-auto px-4 py-8">

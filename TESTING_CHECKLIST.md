@@ -188,5 +188,5 @@
 
 - Document any known issues or limitations here
 - Note any browser-specific quirks
-- Document workarounds if any
+- Document 
 

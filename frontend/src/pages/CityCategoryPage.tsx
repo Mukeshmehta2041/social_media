@@ -10,13 +10,11 @@ const CityCategoryPage = () => {
   const { data: adsData } = useQuery<ApiResponse<Advertisement[]>>({
     queryKey: ['city-category-ads', city, category],
     queryFn: async () => {
-      const params = new URLSearchParams({
-        'filters[status][$eq]': 'approved',
-      });
-      if (city) params.append('filters[city][slug][$eq]', city);
-      if (category) params.append('filters[category][slug][$eq]', category);
+      const params = new URLSearchParams();
+      if (category) params.append('category', category);
       params.append('populate', 'category,city,images');
-      const response = await api.get(`/advertisements?${params.toString()}`);
+      const url = `/advertisements/city/${city}${params.toString() ? `?${params.toString()}` : ''}`;
+      const response = await api.get(url);
       return response.data;
     },
     enabled: !!city,

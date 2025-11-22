@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 
@@ -85,6 +85,10 @@ const router = createBrowserRouter([
             <CategoryPage />
           </LazyWrapper>
         ),
+      },
+      {
+        path: 'category',
+        element: <Navigate to="/" replace />,
       },
       {
         path: 'state/:state',

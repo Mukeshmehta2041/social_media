@@ -1,17 +1,14 @@
-import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import type { Advertisement } from '../types';
 import ImageGallery from '../components/ads/ImageGallery';
 import ContactSection from '../components/ads/ContactSection';
-import ReportModal from '../components/ads/ReportModal';
 import RelatedAds from '../components/ads/RelatedAds';
 import SEOHead from '../components/seo/SEOHead';
 
 const AdDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [showReportModal, setShowReportModal] = useState(false);
 
   const { data, isLoading, error } = useQuery<{ data: Advertisement }>({
     queryKey: ['ad', id],
@@ -110,11 +107,6 @@ const AdDetail = () => {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h1 className="text-3xl font-bold mb-2">{ad.title}</h1>
-                  {ad.price && (
-                    <p className="text-3xl font-bold text-indigo-600">
-                      ₹{ad.price.toLocaleString()}
-                    </p>
-                  )}
                 </div>
                 {ad.isPremium && (
                   <span className="bg-yellow-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
@@ -150,45 +142,6 @@ const AdDetail = () => {
                   }}
                 />
               </div>
-              <div className="border-t pt-4 flex items-center justify-between text-sm text-gray-500">
-                <div>
-                  <p>
-                    Posted:{' '}
-                    {ad.createdAt
-                      ? new Date(ad.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })
-                      : 'N/A'}
-                  </p>
-                  {ad.updatedAt && ad.updatedAt !== ad.createdAt && (
-                    <p>
-                      Updated:{' '}
-                      {new Date(ad.updatedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-4">
-                  {ad.viewCount > 0 && (
-                    <p className="flex items-center gap-1">
-                      <span>👁️</span>
-                      {ad.viewCount} views
-                    </p>
-                  )}
-                  <button
-                    onClick={() => setShowReportModal(true)}
-                    className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center gap-1"
-                  >
-                    <span>🚩</span>
-                    Report
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
           <div>
@@ -204,12 +157,6 @@ const AdDetail = () => {
           limit={6}
         />
       </div>
-      <ReportModal
-        adId={ad.id}
-        adTitle={ad.title}
-        isOpen={showReportModal}
-        onClose={() => setShowReportModal(false)}
-      />
     </>
   );
 };

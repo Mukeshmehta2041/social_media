@@ -19,7 +19,7 @@ const CityPage = () => {
   const { data: adsData } = useQuery<ApiResponse<Advertisement[]>>({
     queryKey: ['city-ads', city],
     queryFn: async () => {
-      const response = await api.get(`/advertisements?filters[city][slug][$eq]=${city}&filters[status][$eq]=approved&populate=category,city,images`);
+      const response = await api.get(`/advertisements/city/${city}?populate=category,city,images`);
       return response.data;
     },
     enabled: !!city,

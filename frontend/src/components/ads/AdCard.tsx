@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { HiLocationMarker, HiEye, HiClock } from 'react-icons/hi';
+import { HiLocationMarker } from 'react-icons/hi';
 import { FaWhatsapp } from 'react-icons/fa';
-import { formatDistanceToNow } from 'date-fns';
 import type { Advertisement } from '../../types';
+
+// Helper function to strip HTML tags and get plain text
+const stripHtmlTags = (html: string): string => {
+  const tmp = document.createElement('DIV');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
 
 interface AdCardProps {
   ad: Advertisement;
@@ -17,7 +23,6 @@ const AdCard = ({ ad }: AdCardProps) => {
     ? `${import.meta.env.VITE_API_URL || 'http://localhost:1337'}${ad.images[0].url}`
     : '/placeholder-image.jpg';
 
-  const phoneNumber = ad.contactPhone || ad.whatsappNumber;
   const whatsappNumber = ad.whatsappNumber || ad.contactPhone;
 
   return (
@@ -25,8 +30,8 @@ const AdCard = ({ ad }: AdCardProps) => {
       to={`/ad/${ad.id}`}
       className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md hover:border-indigo-300 transition-all flex"
     >
-      {/* Left Section - Image */}
-      <div className="relative w-1/3 min-w-[200px] bg-gray-200 flex-shrink-0">
+      {/* Left Section - Small Profile Image */}
+      <div className="relative w-20 h-20 min-w-[80px] bg-gray-200 shrink-0 m-4 rounded-full overflow-hidden">
         {!imageLoaded && !imageError && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="animate-pulse bg-gray-300 w-full h-full" />
@@ -46,19 +51,14 @@ const AdCard = ({ ad }: AdCardProps) => {
           }}
         />
         {ad.isPremium && (
-          <span className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded font-semibold">
+          <span className="absolute -top-1 -right-1 bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full font-semibold text-[10px]">
             Premium
-          </span>
-        )}
-        {ad.images && ad.images.length > 1 && (
-          <span className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white text-xs px-2 py-1 rounded-full">
-            {ad.images.length} Photos
           </span>
         )}
       </div>
 
-      {/* Middle Section - Content */}
-      <div className="flex-1 p-4 flex flex-col justify-between">
+      {/* Content Section */}
+      <div className="flex-1 p-4 flex flex-col justify-between relative">
         <div>
           <div className="flex items-start justify-between mb-2">
             <h3 className="font-semibold text-lg line-clamp-2 flex-1 pr-2">{ad.title}</h3>
@@ -70,43 +70,15 @@ const AdCard = ({ ad }: AdCardProps) => {
           </div>
 
           {/* Description Preview */}
-          {ad.description && typeof ad.description === 'string' && (
+          {ad.description && (
             <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-              {ad.description}
+              {typeof ad.description === 'string'
+                ? stripHtmlTags(ad.description)
+                : typeof ad.description === 'object' && ad.description !== null
+                  ? JSON.stringify(ad.description)
+                  : ''}
             </p>
           )}
-
-          {/* Pricing Tiers */}
-          <div className="mb-3">
-            {ad.priceOneHour || ad.priceTwoHour || ad.priceThreeHour || ad.priceFullNight ? (
-              <div className="flex flex-wrap gap-2 text-sm">
-                {ad.priceOneHour && (
-                  <span className="text-gray-700">
-                    <span className="font-semibold text-indigo-600">1H:</span> ₹{ad.priceOneHour.toLocaleString()}
-                  </span>
-                )}
-                {ad.priceTwoHour && (
-                  <span className="text-gray-700">
-                    <span className="font-semibold text-indigo-600">2H:</span> ₹{ad.priceTwoHour.toLocaleString()}
-                  </span>
-                )}
-                {ad.priceThreeHour && (
-                  <span className="text-gray-700">
-                    <span className="font-semibold text-indigo-600">3H:</span> ₹{ad.priceThreeHour.toLocaleString()}
-                  </span>
-                )}
-                {ad.priceFullNight && (
-                  <span className="text-gray-700">
-                    <span className="font-semibold text-indigo-600">Night:</span> ₹{ad.priceFullNight.toLocaleString()}
-                  </span>
-                )}
-              </div>
-            ) : ad.price ? (
-              <p className="text-indigo-600 font-bold text-xl mb-2">
-                ₹{ad.price.toLocaleString()}
-              </p>
-            ) : null}
-          </div>
 
           {/* Service Locations & Availability */}
           <div className="flex flex-wrap gap-2 mb-3 text-xs">
@@ -122,28 +94,14 @@ const AdCard = ({ ad }: AdCardProps) => {
             )}
           </div>
 
-          {/* Location, Views, Date */}
-          <div className="flex items-center justify-between text-sm text-gray-500">
+          {/* Location */}
+          <div className="flex items-center text-sm text-gray-500">
             {ad.city && (
               <span className="flex items-center">
                 <HiLocationMarker className="w-4 h-4 mr-1" />
                 {ad.city.name}
               </span>
             )}
-            <div className="flex items-center gap-3">
-              {ad.viewCount > 0 && (
-                <span className="flex items-center">
-                  <HiEye className="w-4 h-4 mr-1" />
-                  {ad.viewCount}
-                </span>
-              )}
-              {ad.createdAt && (
-                <span className="flex items-center">
-                  <HiClock className="w-4 h-4 mr-1" />
-                  {formatDistanceToNow(new Date(ad.createdAt), { addSuffix: true })}
-                </span>
-              )}
-            </div>
           </div>
 
           {ad.category && (
@@ -152,27 +110,22 @@ const AdCard = ({ ad }: AdCardProps) => {
             </span>
           )}
         </div>
-      </div>
 
-      {/* Right Section - Contact Info */}
-      {phoneNumber && (
-        <div className="w-32 flex-shrink-0 p-4 flex flex-col items-center justify-center bg-gray-50 border-l border-gray-200">
-          <div className="bg-white rounded-lg px-3 py-2 mb-3 text-center shadow-sm">
-            <p className="text-sm font-semibold text-gray-800">{phoneNumber}</p>
-          </div>
-          {whatsappNumber && (
+        {/* WhatsApp Button - Bottom Right */}
+        {whatsappNumber && (
+          <div className="absolute bottom-4 right-4">
             <a
               href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+              className="flex items-center justify-center w-10 h-10 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors shadow-md"
             >
-              <FaWhatsapp className="w-6 h-6" />
+              <FaWhatsapp className="w-5 h-5" />
             </a>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </Link>
   );
 };

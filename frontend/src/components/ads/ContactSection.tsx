@@ -8,7 +8,6 @@ interface ContactSectionProps {
 const ContactSection = ({ ad }: ContactSectionProps) => {
   // Use contactPhone or whatsappNumber
   const phoneNumber = ad.contactPhone || ad.whatsappNumber;
-  const email = ad.contactEmail || ad.user?.email;
 
   const handleWhatsApp = () => {
     if (phoneNumber) {
@@ -59,28 +58,7 @@ const ContactSection = ({ ad }: ContactSectionProps) => {
         </div>
       ) : null}
 
-      {email ? (
-        <div className="mb-4">
-          <p className="text-sm text-gray-600 mb-2">Email</p>
-          <div className="flex items-center gap-2">
-            <a
-              href={`mailto:${email}`}
-              className="text-lg text-indigo-600 hover:text-indigo-800 break-all"
-            >
-              {email}
-            </a>
-            <button
-              onClick={() => copyToClipboard(email)}
-              className="text-indigo-600 hover:text-indigo-700 flex-shrink-0"
-              title="Copy email"
-            >
-              📋
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {!phoneNumber && !email && (
+      {!phoneNumber && (
         <p className="text-gray-500 text-sm">No contact information available</p>
       )}
     </div>

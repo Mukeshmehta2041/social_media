@@ -88,9 +88,6 @@ const FeaturedAdsCarousel = ({ limit = 6, autoRotateInterval = 5000 }: FeaturedA
               {currentAd.age && (
                 <span>{currentAd.age} Years</span>
               )}
-              {currentAd.price && (
-                <span className="font-semibold">₹{currentAd.price.toLocaleString()}</span>
-              )}
             </div>
           </div>
         </div>

@@ -1,20 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
-import type { Category, City, Advertisement, ApiResponse } from '../types';
+import type { City, Advertisement, ApiResponse } from '../types';
 import AdCard from '../components/ads/AdCard';
-import FeaturedAdsCarousel from '../components/ads/FeaturedAdsCarousel';
 import SEOHead from '../components/seo/SEOHead';
 
 const Home = () => {
-  const { data: categoriesData } = useQuery<ApiResponse<Category[]>>({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const response = await api.get('/categories?filters[isActive][$eq]=true');
-      return response.data;
-    },
-  });
-
   const { data: citiesData } = useQuery<ApiResponse<City[]>>({
     queryKey: ['cities'],
     queryFn: async () => {
@@ -23,26 +14,16 @@ const Home = () => {
     },
   });
 
-  const { data: featuredAdsData } = useQuery<ApiResponse<Advertisement[]>>({
-    queryKey: ['featured-ads'],
+  const { data: allAdsData, isLoading } = useQuery<ApiResponse<Advertisement[]>>({
+    queryKey: ['all-ads'],
     queryFn: async () => {
-      const response = await api.get('/advertisements?filters[isPremium][$eq]=true&filters[status][$eq]=approved&pagination[limit]=6');
+      const response = await api.get('/advertisements?filters[status][$eq]=approved&populate=category,city,images&sort=createdAt:desc&pagination[limit]=100');
       return response.data;
     },
   });
 
-  const { data: recentAdsData } = useQuery<ApiResponse<Advertisement[]>>({
-    queryKey: ['recent-ads'],
-    queryFn: async () => {
-      const response = await api.get('/advertisements?filters[status][$eq]=approved&sort=createdAt:desc&pagination[limit]=12');
-      return response.data;
-    },
-  });
-
-  const categories = categoriesData?.data || [];
   const cities = citiesData?.data || [];
-  const featuredAds = featuredAdsData?.data || [];
-  const recentAds = recentAdsData?.data || [];
+  const allAds = allAdsData?.data || [];
 
   return (
     <>
@@ -80,27 +61,6 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Categories Section */}
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Browse by Category</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-              {categories.map((category: Category) => (
-                <Link
-                  key={category.id}
-                  to={`/category/${category.slug}`}
-                  className="bg-gray-50 p-6 rounded-lg text-center hover:bg-indigo-50 transition group"
-                >
-                  <div className="text-4xl mb-3">{category.icon || '📋'}</div>
-                  <h3 className="font-semibold text-gray-800 group-hover:text-indigo-600">
-                    {category.name}
-                  </h3>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* Popular Cities */}
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
@@ -124,45 +84,32 @@ const Home = () => {
           </div>
         </section>
 
-        {/* VIP Prime Stories / Featured Ads Carousel */}
-        <section className="py-16 bg-white">
+        {/* All Listings */}
+        <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">VIP Prime Stories</h2>
-            <FeaturedAdsCarousel limit={6} />
-          </div>
-        </section>
-
-        {/* Featured Ads Grid */}
-        {featuredAds.length > 0 && (
-          <section className="py-16 bg-white">
-            <div className="container mx-auto px-4">
-              <h2 className="text-3xl font-bold text-center mb-12">Featured Listings</h2>
+            <h2 className="text-3xl font-bold text-center mb-12">All Listings</h2>
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+                <p className="mt-4 text-gray-600">Loading listings...</p>
+              </div>
+            ) : allAds.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600 text-lg mb-4">No listings available at the moment</p>
+                <Link
+                  to="/post-ad"
+                  className="inline-block bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
+                >
+                  Post Your First Ad
+                </Link>
+              </div>
+            ) : (
               <div className="grid grid-cols-1 gap-6">
-                {featuredAds.map((ad: Advertisement) => (
+                {allAds.map((ad: Advertisement) => (
                   <AdCard key={ad.id} ad={ad} />
                 ))}
               </div>
-            </div>
-          </section>
-        )}
-
-        {/* Recent Ads */}
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12">Recent Listings</h2>
-            <div className="grid grid-cols-1 gap-6">
-              {recentAds.map((ad: Advertisement) => (
-                <AdCard key={ad.id} ad={ad} />
-              ))}
-            </div>
-            <div className="text-center mt-8">
-              <Link
-                to="/search"
-                className="inline-block bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
-              >
-                View All Listings
-              </Link>
-            </div>
+            )}
           </div>
         </section>
       </div>

@@ -29,8 +29,11 @@ const RelatedAds = ({ currentAdId, limit = 6 }: RelatedAdsProps) => {
   }
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-6">Related Listings</h2>
+    <div className="mt-12 pt-8 border-t border-gray-200">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Related Listings</h2>
+        <p className="text-gray-600">You might also be interested in these listings</p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {relatedAds.map((ad) => (
           <AdCard key={ad.id} ad={ad} />

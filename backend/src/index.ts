@@ -37,6 +37,7 @@ export default {
           'api::advertisement.advertisement.incrementView',
           'api::advertisement.advertisement.getByCity',
           'api::advertisement.advertisement.getByCategory',
+          'api::advertisement.advertisement.getRelated',
           'api::category.category.find',
           'api::category.category.findOne',
           'api::city.city.find',
@@ -93,6 +94,7 @@ export default {
           'api::advertisement.advertisement.requestPromotion',
           'api::advertisement.advertisement.getByCity',
           'api::advertisement.advertisement.getByCategory',
+          'api::advertisement.advertisement.getRelated',
           // Category permissions
           'api::category.category.find',
           'api::category.category.findOne',

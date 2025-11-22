@@ -32,6 +32,7 @@ If you prefer to set up permissions manually through the Strapi admin panel:
    - ✅ `incrementView` (POST /api/advertisements/:id/increment-view)
    - ✅ `getByCity` (GET /api/advertisements/city/:citySlug)
    - ✅ `getByCategory` (GET /api/advertisements/category/:categorySlug)
+   - ✅ `getRelated` (GET /api/advertisements/:id/related)
    
    **Category:**
    - ✅ `find` (GET /api/categories)

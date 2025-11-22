@@ -1,0 +1,34 @@
+{
+  "kind": "collectionType",
+  "collectionName": "saved_searches",
+  "info": {
+    "singularName": "saved-search",
+    "pluralName": "saved-searches",
+    "displayName": "Saved Search",
+    "description": "User saved searches"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "searchQuery": {
+      "type": "json"
+    },
+    "notificationsEnabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "user": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "required": true
+    }
+  }
+}
+

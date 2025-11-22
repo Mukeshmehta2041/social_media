@@ -7,6 +7,7 @@ import type { Advertisement, ApiResponse, SearchFilters } from '../types';
 import AdCard from '../components/ads/AdCard';
 import FilterSidebar from '../components/search/FilterSidebar';
 import SearchBar from '../components/search/SearchBar';
+import FrequentSearches from '../components/search/FrequentSearches';
 import SEOHead from '../components/seo/SEOHead';
 
 const SearchResults = () => {
@@ -179,6 +180,17 @@ const SearchResults = () => {
               if (params.q) newParams.append('q', params.q);
               if (params.city) newParams.append('city', params.city);
               if (params.category) newParams.append('category', params.category);
+              navigate(`/search?${newParams.toString()}`);
+            }}
+          />
+        </div>
+
+        {/* Frequent Searches */}
+        <div className="mb-6">
+          <FrequentSearches
+            onSearchClick={(term) => {
+              const newParams = new URLSearchParams();
+              newParams.append('q', term);
               navigate(`/search?${newParams.toString()}`);
             }}
           />

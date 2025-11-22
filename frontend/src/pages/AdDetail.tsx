@@ -6,6 +6,7 @@ import type { Advertisement } from '../types';
 import ImageGallery from '../components/ads/ImageGallery';
 import ContactSection from '../components/ads/ContactSection';
 import ReportModal from '../components/ads/ReportModal';
+import RelatedAds from '../components/ads/RelatedAds';
 import SEOHead from '../components/seo/SEOHead';
 
 const AdDetail = () => {
@@ -194,6 +195,14 @@ const AdDetail = () => {
             <ContactSection ad={ad} />
           </div>
         </div>
+
+        {/* Related Ads */}
+        <RelatedAds
+          currentAdId={ad.id}
+          categoryId={ad.category?.id}
+          cityId={ad.city?.id}
+          limit={6}
+        />
       </div>
       <ReportModal
         adId={ad.id}

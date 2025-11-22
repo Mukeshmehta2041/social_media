@@ -28,6 +28,32 @@
     "price": {
       "type": "decimal"
     },
+    "age": {
+      "type": "integer"
+    },
+    "priceOneHour": {
+      "type": "decimal"
+    },
+    "priceTwoHour": {
+      "type": "decimal"
+    },
+    "priceThreeHour": {
+      "type": "decimal"
+    },
+    "priceFullNight": {
+      "type": "decimal"
+    },
+    "serviceLocations": {
+      "type": "enumeration",
+      "enum": ["home", "hotel", "both"],
+      "default": "both"
+    },
+    "availability": {
+      "type": "string"
+    },
+    "serviceTypes": {
+      "type": "json"
+    },
     "status": {
       "type": "enumeration",
       "enum": ["draft", "pending", "approved", "rejected", "expired"],

@@ -1,16 +1,45 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import ImageUpload from '../components/forms/ImageUpload';
 import type { Category, City } from '../types';
 
+const schema = yup.object({
+  title: yup.string().required('Title is required').min(5, 'Title must be at least 5 characters').max(100, 'Title must be less than 100 characters'),
+  description: yup.string().required('Description is required').min(20, 'Description must be at least 20 characters'),
+  price: yup.string().optional().matches(/^\d+(\.\d{1,2})?$/, 'Please enter a valid price'),
+  age: yup.string().optional().matches(/^\d+$/, 'Please enter a valid age').test('min-age', 'Age must be at least 18', (value) => !value || parseInt(value) >= 18).test('max-age', 'Please enter a valid age', (value) => !value || parseInt(value) <= 100),
+  priceOneHour: yup.string().optional().matches(/^\d+(\.\d{1,2})?$/, 'Please enter a valid price'),
+  priceTwoHour: yup.string().optional().matches(/^\d+(\.\d{1,2})?$/, 'Please enter a valid price'),
+  priceThreeHour: yup.string().optional().matches(/^\d+(\.\d{1,2})?$/, 'Please enter a valid price'),
+  priceFullNight: yup.string().optional().matches(/^\d+(\.\d{1,2})?$/, 'Please enter a valid price'),
+  serviceLocations: yup.string().optional().oneOf(['home', 'hotel', 'both'], 'Invalid service location'),
+  availability: yup.string().optional(),
+  serviceTypes: yup.array().of(yup.string()).optional(),
+  category: yup.string().required('Category is required'),
+  city: yup.string().required('City is required'),
+  contactPhone: yup.string().required('Phone number is required').matches(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Please enter a valid phone number'),
+  contactEmail: yup.string().optional().email('Please enter a valid email address'),
+  whatsappNumber: yup.string().optional().matches(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Please enter a valid phone number'),
+});
+
 interface PostAdForm {
   title: string;
   description: string;
   price: string;
+  age?: string;
+  priceOneHour?: string;
+  priceTwoHour?: string;
+  priceThreeHour?: string;
+  priceFullNight?: string;
+  serviceLocations?: 'home' | 'hotel' | 'both';
+  availability?: string;
+  serviceTypes?: string[];
   category: string;
   city: string;
   contactPhone: string;
@@ -31,7 +60,9 @@ const PostAd = () => {
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<PostAdForm>();
+  } = useForm<PostAdForm>({
+    resolver: yupResolver(schema) as any,
+  });
 
   // Redirect if not authenticated
   if (!isAuthenticated) {
@@ -82,7 +113,15 @@ const PostAd = () => {
         data: {
           title: data.title,
           description: data.description,
-          price: parseFloat(data.price) || 0,
+          price: data.price ? parseFloat(data.price) : undefined,
+          age: data.age ? parseInt(data.age) : undefined,
+          priceOneHour: data.priceOneHour ? parseFloat(data.priceOneHour) : undefined,
+          priceTwoHour: data.priceTwoHour ? parseFloat(data.priceTwoHour) : undefined,
+          priceThreeHour: data.priceThreeHour ? parseFloat(data.priceThreeHour) : undefined,
+          priceFullNight: data.priceFullNight ? parseFloat(data.priceFullNight) : undefined,
+          serviceLocations: data.serviceLocations || 'both',
+          availability: data.availability || undefined,
+          serviceTypes: data.serviceTypes || undefined,
           category: data.category,
           city: data.city,
           contactPhone: data.contactPhone,
@@ -148,8 +187,8 @@ const PostAd = () => {
             <div key={stepNum} className="flex items-center flex-1">
               <div
                 className={`flex items-center justify-center w-10 h-10 rounded-full ${step >= stepNum
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-200 text-gray-600'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-200 text-gray-600'
                   }`}
               >
                 {stepNum}
@@ -222,24 +261,103 @@ const PostAd = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Price (₹)
+                Age
               </label>
               <input
-                {...register('price', {
-                  pattern: {
-                    value: /^\d+(\.\d{1,2})?$/,
-                    message: 'Please enter a valid price',
-                  },
-                })}
+                {...register('age')}
+                type="number"
+                min="18"
+                max="100"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Age (optional)"
+              />
+              {errors.age && (
+                <p className="mt-1 text-sm text-red-600">{errors.age.message}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Price (₹) - General
+              </label>
+              <input
+                {...register('price')}
                 type="number"
                 step="0.01"
                 min="0"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="0.00"
+                placeholder="0.00 (optional)"
               />
               {errors.price && (
                 <p className="mt-1 text-sm text-red-600">{errors.price.message}</p>
               )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  1 Hour (₹)
+                </label>
+                <input
+                  {...register('priceOneHour')}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="0.00"
+                />
+                {errors.priceOneHour && (
+                  <p className="mt-1 text-sm text-red-600">{errors.priceOneHour.message}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  2 Hours (₹)
+                </label>
+                <input
+                  {...register('priceTwoHour')}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="0.00"
+                />
+                {errors.priceTwoHour && (
+                  <p className="mt-1 text-sm text-red-600">{errors.priceTwoHour.message}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  3 Hours (₹)
+                </label>
+                <input
+                  {...register('priceThreeHour')}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="0.00"
+                />
+                {errors.priceThreeHour && (
+                  <p className="mt-1 text-sm text-red-600">{errors.priceThreeHour.message}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Night (₹)
+                </label>
+                <input
+                  {...register('priceFullNight')}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="0.00"
+                />
+                {errors.priceFullNight && (
+                  <p className="mt-1 text-sm text-red-600">{errors.priceFullNight.message}</p>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -286,6 +404,51 @@ const PostAd = () => {
               {errors.city && (
                 <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
               )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Service Locations
+              </label>
+              <select
+                {...register('serviceLocations')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="both">Both (Home & Hotel)</option>
+                <option value="home">Home Only</option>
+                <option value="hotel">Hotel Only</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Availability
+              </label>
+              <input
+                {...register('availability')}
+                type="text"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="e.g., 24/7, Mon-Fri 9am-6pm, etc."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Service Types (select all that apply)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {['Full Body Massage', 'Erotic Massage', 'Oil Massage', 'Nuru Massage', 'B2B Massage', 'Oral Services', 'Role Play', 'BDSM'].map((service) => (
+                  <label key={service} className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      value={service}
+                      {...register('serviceTypes')}
+                      className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                    />
+                    <span className="text-sm text-gray-700">{service}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -381,10 +544,35 @@ const PostAd = () => {
                 <h3 className="font-semibold text-gray-700">Description</h3>
                 <p className="text-gray-900 whitespace-pre-line">{watch('description')}</p>
               </div>
+              {watch('age') && (
+                <div>
+                  <h3 className="font-semibold text-gray-700">Age</h3>
+                  <p className="text-gray-900">{watch('age')} Years</p>
+                </div>
+              )}
               {watch('price') && (
                 <div>
-                  <h3 className="font-semibold text-gray-700">Price</h3>
+                  <h3 className="font-semibold text-gray-700">Price (General)</h3>
                   <p className="text-gray-900">₹{parseFloat(watch('price') || '0').toLocaleString()}</p>
+                </div>
+              )}
+              {(watch('priceOneHour') || watch('priceTwoHour') || watch('priceThreeHour') || watch('priceFullNight')) && (
+                <div>
+                  <h3 className="font-semibold text-gray-700">Pricing Tiers</h3>
+                  <div className="space-y-1">
+                    {watch('priceOneHour') && (
+                      <p className="text-gray-900">1 Hour: ₹{parseFloat(watch('priceOneHour') || '0').toLocaleString()}</p>
+                    )}
+                    {watch('priceTwoHour') && (
+                      <p className="text-gray-900">2 Hours: ₹{parseFloat(watch('priceTwoHour') || '0').toLocaleString()}</p>
+                    )}
+                    {watch('priceThreeHour') && (
+                      <p className="text-gray-900">3 Hours: ₹{parseFloat(watch('priceThreeHour') || '0').toLocaleString()}</p>
+                    )}
+                    {watch('priceFullNight') && (
+                      <p className="text-gray-900">Full Night: ₹{parseFloat(watch('priceFullNight') || '0').toLocaleString()}</p>
+                    )}
+                  </div>
                 </div>
               )}
               <div>
@@ -393,6 +581,26 @@ const PostAd = () => {
                   {categories.find((c: Category) => c.id.toString() === selectedCategory)?.name || 'Not selected'}
                 </p>
               </div>
+              {watch('serviceLocations') && (
+                <div>
+                  <h3 className="font-semibold text-gray-700">Service Locations</h3>
+                  <p className="text-gray-900">
+                    {watch('serviceLocations') === 'home' ? 'Home Only' : watch('serviceLocations') === 'hotel' ? 'Hotel Only' : 'Both (Home & Hotel)'}
+                  </p>
+                </div>
+              )}
+              {watch('availability') && (
+                <div>
+                  <h3 className="font-semibold text-gray-700">Availability</h3>
+                  <p className="text-gray-900">{watch('availability')}</p>
+                </div>
+              )}
+              {watch('serviceTypes') && Array.isArray(watch('serviceTypes')) && watch('serviceTypes')!.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-700">Service Types</h3>
+                  <p className="text-gray-900">{watch('serviceTypes')!.join(', ')}</p>
+                </div>
+              )}
               <div>
                 <h3 className="font-semibold text-gray-700">City</h3>
                 <p className="text-gray-900">

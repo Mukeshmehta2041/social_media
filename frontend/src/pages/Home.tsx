@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import type { Category, City, Advertisement, ApiResponse } from '../types';
 import AdCard from '../components/ads/AdCard';
+import FeaturedAdsCarousel from '../components/ads/FeaturedAdsCarousel';
+import FrequentSearches from '../components/search/FrequentSearches';
 import SEOHead from '../components/seo/SEOHead';
 
 const Home = () => {
@@ -123,7 +125,22 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Featured Ads */}
+        {/* VIP Prime Stories / Featured Ads Carousel */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-12">VIP Prime Stories</h2>
+            <FeaturedAdsCarousel limit={6} />
+          </div>
+        </section>
+
+        {/* Frequent Searches */}
+        <section className="py-8 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <FrequentSearches />
+          </div>
+        </section>
+
+        {/* Featured Ads Grid */}
         {featuredAds.length > 0 && (
           <section className="py-16 bg-white">
             <div className="container mx-auto px-4">

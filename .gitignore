@@ -97,6 +97,5 @@ jest.setup.js
 .gitattributes
 .gitmodules
 .gitlab-ci.yml
-.github/
 
 docs/

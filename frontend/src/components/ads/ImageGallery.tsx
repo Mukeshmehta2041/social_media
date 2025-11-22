@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Media } from '../../types';
 
 interface ImageGalleryProps {
@@ -28,6 +28,24 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
     setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
+  // Keyboard navigation
+  useEffect(() => {
+    if (!lightboxOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
+      } else if (e.key === 'ArrowRight') {
+        setSelectedIndex((prev) => (prev + 1) % images.length);
+      } else if (e.key === 'Escape') {
+        setLightboxOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, images.length]);
+
   return (
     <>
       <div>
@@ -49,23 +67,28 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
           </div>
         </div>
         {images.length > 1 && (
-          <div className="grid grid-cols-4 gap-2">
-            {images.map((image, index) => (
-              <button
-                key={image.id}
-                onClick={() => setSelectedIndex(index)}
-                className={`w-full h-24 bg-gray-200 rounded overflow-hidden transition-all ${index === selectedIndex ? 'ring-2 ring-indigo-500' : 'hover:opacity-75'
-                  }`}
-              >
-                <img
-                  src={`${baseUrl}${image.formats?.thumbnail?.url || image.url}`}
-                  alt={image.alternativeText || `Thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="mb-2 text-sm text-gray-600 text-center">
+              Image {selectedIndex + 1} of {images.length}
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {images.map((image, index) => (
+                <button
+                  key={image.id}
+                  onClick={() => setSelectedIndex(index)}
+                  className={`w-full h-24 bg-gray-200 rounded overflow-hidden transition-all ${index === selectedIndex ? 'ring-2 ring-indigo-500' : 'hover:opacity-75'
+                    }`}
+                >
+                  <img
+                    src={`${baseUrl}${image.formats?.thumbnail?.url || image.url}`}
+                    alt={image.alternativeText || `Thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

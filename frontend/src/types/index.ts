@@ -30,8 +30,16 @@ export interface UserProfile {
 export interface Advertisement {
   id: number;
   title: string;
-  description: string | { [key: string]: any };
+  description: string | Record<string, unknown>;
   price?: number;
+  age?: number;
+  priceOneHour?: number;
+  priceTwoHour?: number;
+  priceThreeHour?: number;
+  priceFullNight?: number;
+  serviceLocations?: 'home' | 'hotel' | 'both';
+  availability?: string;
+  serviceTypes?: string[];
   category?: Category;
   city?: City;
   user?: User;

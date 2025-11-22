@@ -9,6 +9,7 @@ const SearchResults = lazy(() => import('../pages/SearchResults'));
 const CityPage = lazy(() => import('../pages/CityPage'));
 const CategoryPage = lazy(() => import('../pages/CategoryPage'));
 const CityCategoryPage = lazy(() => import('../pages/CityCategoryPage'));
+const StatePage = lazy(() => import('../pages/StatePage'));
 const AdDetail = lazy(() => import('../pages/AdDetail'));
 const Login = lazy(() => import('../pages/auth/Login'));
 const Register = lazy(() => import('../pages/auth/Register'));
@@ -82,6 +83,14 @@ const router = createBrowserRouter([
         element: (
           <LazyWrapper>
             <CategoryPage />
+          </LazyWrapper>
+        ),
+      },
+      {
+        path: 'state/:state',
+        element: (
+          <LazyWrapper>
+            <StatePage />
           </LazyWrapper>
         ),
       },

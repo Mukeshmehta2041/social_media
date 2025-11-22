@@ -190,5 +190,45 @@ export default factories.createCoreController('api::advertisement.advertisement'
 
     return { data: results, meta: { pagination } };
   },
+
+  async getRelated(ctx) {
+    const { id } = ctx.params;
+    const { query } = ctx;
+    const limit = parseInt(String(query.limit || '6'));
+
+    // Get the current ad
+    const currentAd: any = await strapi.entityService.findOne('api::advertisement.advertisement', id, {
+      populate: ['category', 'city'],
+    });
+
+    if (!currentAd) {
+      return ctx.notFound('Advertisement not found');
+    }
+
+    const filters: any = {
+      id: { $ne: id },
+      status: 'approved',
+      publishedAt: { $notNull: true },
+    };
+
+    // Filter by category or city if available
+    if (currentAd.category && typeof currentAd.category === 'object' && 'id' in currentAd.category) {
+      filters.category = { id: currentAd.category.id };
+    }
+    if (currentAd.city && typeof currentAd.city === 'object' && 'id' in currentAd.city) {
+      filters.city = { id: currentAd.city.id };
+    }
+
+    const { results } = await strapi
+      .service('api::advertisement.advertisement')
+      .find({
+        filters,
+        populate: ['category', 'city', 'images'],
+        pagination: { limit },
+        sort: { createdAt: 'desc' },
+      });
+
+    return { data: results };
+  },
 }));
 

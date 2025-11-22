@@ -36,5 +36,14 @@ export default {
         middlewares: [],
       },
     },
+    {
+      method: 'GET',
+      path: '/advertisements/:id/related',
+      handler: 'api::advertisement.advertisement.getRelated',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
   ],
 };

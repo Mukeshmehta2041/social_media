@@ -7,6 +7,7 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import router from './router'
 import { useAuthStore } from './store/authStore'
+import ResourceHints from './components/performance/ResourceHints'
 import './index.css'
 
 // Initialize auth store
@@ -28,6 +29,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
+        <ResourceHints />
         <RouterProvider router={router} />
         <ToastContainer
           position="top-right"

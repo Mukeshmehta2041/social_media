@@ -106,24 +106,20 @@ export default factories.createCoreController('api::advertisement.advertisement'
       return ctx.notFound();
     }
 
-    // Increment view count
+    // Increment view count - update in place and return updated entity
+    // This is more efficient than fetching again
+    const currentViewCount = entity.viewCount || 0;
     await strapi
       .service('api::advertisement.advertisement')
       .update(id, {
-        data: { viewCount: (entity.viewCount || 0) + 1 },
+        data: { viewCount: currentViewCount + 1 },
       });
 
-    // Fetch updated entity with new view count
-    const updatedEntity = await strapi
-      .query('api::advertisement.advertisement')
-      .findOne({
-        where: {
-          id: parseInt(id) || id,
-        },
-        populate: ['category', 'city', 'user', 'images'],
-      });
+    // Update entity object with incremented count for immediate response
+    // This avoids a second database query
+    entity.viewCount = currentViewCount + 1;
 
-    return { data: updatedEntity };
+    return { data: entity };
   },
 
   async incrementView(ctx) {

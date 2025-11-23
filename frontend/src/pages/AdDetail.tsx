@@ -13,7 +13,7 @@ const AdDetail = () => {
   const { data, isLoading, error } = useQuery<{ data: Advertisement }>({
     queryKey: ['ad', id],
     queryFn: async () => {
-      const response = await api.get(`/advertisements/${id}?populate=*`);
+      const response = await api.get(`/advertisements/${id}?populate=category,city,images,user`);
       // Handle both response.data and direct response structures
       return response.data;
     },

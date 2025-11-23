@@ -1,5 +1,6 @@
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useCallback, useEffect } from 'react';
 import api from '../services/api';
 import type { Advertisement, ApiResponse } from '../types';
 import AdCard from '../components/ads/AdCard';
@@ -9,6 +10,7 @@ import SEOHead from '../components/seo/SEOHead';
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const search = searchParams.get('q') || '';
   const category = searchParams.get('category') || '';
@@ -50,26 +52,27 @@ const SearchResults = () => {
     },
   });
 
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">Loading...</div>
-      </div>
-    );
-  }
-
   const ads = data?.data || [];
   const pagination = data?.meta?.pagination;
 
-  const totalResults = pagination?.total || ads.length;
-  const currentPage = pagination?.page || page;
-  const totalPages = pagination?.pageCount || 1;
-  const startResult = totalResults > 0 ? ((currentPage - 1) * (pagination?.pageSize || 24)) + 1 : 0;
-  const endResult = Math.min(currentPage * (pagination?.pageSize || 24), totalResults);
+  const { totalResults, currentPage, totalPages, startResult, endResult } = useMemo(() => {
+    const total = pagination?.total || ads.length;
+    const current = pagination?.page || page;
+    const pages = pagination?.pageCount || 1;
+    const pageSize = pagination?.pageSize || 24;
+    const start = total > 0 ? ((current - 1) * pageSize) + 1 : 0;
+    const end = Math.min(current * pageSize, total);
+    return {
+      totalResults: total,
+      currentPage: current,
+      totalPages: pages,
+      startResult: start,
+      endResult: end,
+    };
+  }, [pagination, ads.length, page]);
 
   // Generate page numbers for pagination
-  const getPageNumbers = () => {
+  const pageNumbers = useMemo(() => {
     const pages: (number | string)[] = [];
     const maxVisible = 5;
 
@@ -103,16 +106,72 @@ const SearchResults = () => {
     }
 
     return pages;
-  };
+  }, [totalPages, currentPage]);
 
-  const handlePageChange = (newPage: number) => {
+  const handlePageChange = useCallback((newPage: number) => {
     setSearchParams((prev) => {
       const newParams = new URLSearchParams(prev);
       newParams.set('page', newPage.toString());
       return newParams;
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, [setSearchParams]);
+
+  const handleSearch = useCallback((params: { q?: string; city?: string; category?: string }) => {
+    const newParams = new URLSearchParams();
+    if (params.q) newParams.append('q', params.q);
+    if (params.city) newParams.append('city', params.city);
+    if (params.category) newParams.append('category', params.category);
+    newParams.delete('page'); // Reset to page 1 on new search
+    navigate(`/search?${newParams.toString()}`);
+  }, [navigate]);
+
+  // Prefetch next page for better UX
+  useEffect(() => {
+    if (currentPage < totalPages) {
+      const nextPage = currentPage + 1;
+      const params = new URLSearchParams({
+        'pagination[page]': nextPage.toString(),
+        'pagination[pageSize]': '24',
+      });
+
+      if (search) params.append('search', search);
+      if (category) params.append('category', category);
+      if (city) params.append('city', city);
+      if (minPrice) params.append('minPrice', minPrice);
+      if (maxPrice) params.append('maxPrice', maxPrice);
+
+      if (sort === 'newest') {
+        params.append('sort', 'createdAt:desc');
+      } else if (sort === 'oldest') {
+        params.append('sort', 'createdAt:asc');
+      } else if (sort === 'price-low') {
+        params.append('sort', 'price:asc');
+      } else if (sort === 'price-high') {
+        params.append('sort', 'price:desc');
+      }
+
+      params.append('populate', 'category,city,images');
+
+      // Prefetch next page
+      queryClient.prefetchQuery({
+        queryKey: ['search', search, category, city, minPrice, maxPrice, sort, nextPage],
+        queryFn: async () => {
+          const response = await api.get(`/advertisements?${params.toString()}`);
+          return response.data;
+        },
+      });
+    }
+  }, [currentPage, totalPages, search, category, city, minPrice, maxPrice, sort, queryClient]);
+
+  // Early return after all hooks
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -125,14 +184,7 @@ const SearchResults = () => {
         <div className="bg-gray-100 py-6">
           <div className="container mx-auto px-4">
             <SearchBar
-              onSearch={(params) => {
-                const newParams = new URLSearchParams();
-                if (params.q) newParams.append('q', params.q);
-                if (params.city) newParams.append('city', params.city);
-                if (params.category) newParams.append('category', params.category);
-                newParams.delete('page'); // Reset to page 1 on new search
-                navigate(`/search?${newParams.toString()}`);
-              }}
+              onSearch={handleSearch}
             />
             {!isLoading && (
               <div className="mt-4 text-sm text-gray-600">
@@ -196,7 +248,7 @@ const SearchResults = () => {
 
                     {/* Page Numbers */}
                     <div className="flex items-center gap-1">
-                      {getPageNumbers().map((pageNum, index) => {
+                      {pageNumbers.map((pageNum, index) => {
                         if (pageNum === '...') {
                           return (
                             <span key={`ellipsis-${index}`} className="px-2 text-gray-400">

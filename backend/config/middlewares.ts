@@ -15,4 +15,17 @@ export default [
   'strapi::session',
   'strapi::favicon',
   'strapi::public',
+  // Compression middleware for better performance
+  {
+    name: 'strapi::compression',
+    config: {
+      enabled: true,
+      threshold: 1024, // Only compress responses larger than 1KB
+    },
+  },
+  // Custom cache headers middleware
+  {
+    resolve: './src/middlewares/cache-headers',
+    config: {},
+  },
 ];

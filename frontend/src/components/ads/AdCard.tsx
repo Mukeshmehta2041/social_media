@@ -1,29 +1,50 @@
-import { useState } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { Link } from 'react-router-dom';
 import { HiLocationMarker } from 'react-icons/hi';
 import { FaWhatsapp } from 'react-icons/fa';
 import type { Advertisement } from '../../types';
 
-// Helper function to strip HTML tags and get plain text
-const stripHtmlTags = (html: string): string => {
-  const tmp = document.createElement('DIV');
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
-};
+// Helper function to strip HTML tags and get plain text - memoized
+const stripHtmlTags = (() => {
+  const cache = new Map<string, string>();
+  return (html: string): string => {
+    if (cache.has(html)) {
+      return cache.get(html)!;
+    }
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = html;
+    const result = tmp.textContent || tmp.innerText || '';
+    cache.set(html, result);
+    return result;
+  };
+})();
 
 interface AdCardProps {
   ad: Advertisement;
 }
 
-const AdCard = ({ ad }: AdCardProps) => {
+const AdCard = memo(({ ad }: AdCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const imageUrl = ad.images && ad.images.length > 0
-    ? `${import.meta.env.VITE_API_URL || 'http://localhost:1337'}${ad.images[0].url}`
-    : '/placeholder-image.jpg';
+  const imageUrl = useMemo(() => {
+    return ad.images && ad.images.length > 0
+      ? `${import.meta.env.VITE_API_URL || 'http://localhost:1337'}${ad.images[0].url}`
+      : '/placeholder-image.jpg';
+  }, [ad.images]);
 
-  const whatsappNumber = ad.whatsappNumber || ad.contactPhone;
+  const whatsappNumber = useMemo(() => ad.whatsappNumber || ad.contactPhone, [ad.whatsappNumber, ad.contactPhone]);
+
+  const descriptionText = useMemo(() => {
+    if (!ad.description) return '';
+    if (typeof ad.description === 'string') {
+      return stripHtmlTags(ad.description);
+    }
+    if (typeof ad.description === 'object' && ad.description !== null) {
+      return JSON.stringify(ad.description);
+    }
+    return '';
+  }, [ad.description]);
 
   return (
     <Link
@@ -43,6 +64,7 @@ const AdCard = ({ ad }: AdCardProps) => {
           className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'
             }`}
           loading="lazy"
+          decoding="async"
           onLoad={() => setImageLoaded(true)}
           onError={(e) => {
             setImageError(true);
@@ -70,13 +92,9 @@ const AdCard = ({ ad }: AdCardProps) => {
           </div>
 
           {/* Description Preview */}
-          {ad.description && (
+          {descriptionText && (
             <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-              {typeof ad.description === 'string'
-                ? stripHtmlTags(ad.description)
-                : typeof ad.description === 'object' && ad.description !== null
-                  ? JSON.stringify(ad.description)
-                  : ''}
+              {descriptionText}
             </p>
           )}
 
@@ -128,7 +146,9 @@ const AdCard = ({ ad }: AdCardProps) => {
       </div>
     </Link>
   );
-};
+});
+
+AdCard.displayName = 'AdCard';
 
 export default AdCard;
 

@@ -69,7 +69,7 @@ const EditAd = () => {
   const { data: adData, isLoading } = useQuery<{ data: Advertisement }>({
     queryKey: ['ad', id],
     queryFn: async () => {
-      const response = await api.get(`/advertisements/${id}?populate=*`);
+      const response = await api.get(`/advertisements/${id}?populate=category,city,images,user`);
       return response.data;
     },
     enabled: !!id,

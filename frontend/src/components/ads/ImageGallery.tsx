@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Media } from '../../types';
 
 interface ImageGalleryProps {
@@ -9,6 +9,28 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  const baseUrl = useMemo(() => import.meta.env.VITE_API_URL || 'http://localhost:1337', []);
+
+  const nextImage = useCallback(() => {
+    setSelectedIndex((prev) => (prev + 1) % images.length);
+  }, [images.length]);
+
+  const prevImage = useCallback(() => {
+    setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
+  }, [images.length]);
+
+  const handleLightboxOpen = useCallback(() => {
+    setLightboxOpen(true);
+  }, []);
+
+  const handleLightboxClose = useCallback(() => {
+    setLightboxOpen(false);
+  }, []);
+
+  const handleThumbnailClick = useCallback((index: number) => {
+    setSelectedIndex(index);
+  }, []);
+
   if (!images || images.length === 0) {
     return (
       <div className="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -17,16 +39,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
     );
   }
 
-  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:1337';
   const mainImage = images[selectedIndex];
-
-  const nextImage = () => {
-    setSelectedIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const prevImage = () => {
-    setSelectedIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
 
   // Keyboard navigation
   useEffect(() => {
@@ -51,7 +64,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
       <div>
         <div
           className="w-full h-96 bg-gray-200 rounded-lg overflow-hidden mb-4 cursor-pointer relative group"
-          onClick={() => setLightboxOpen(true)}
+          onClick={handleLightboxOpen}
         >
           <img
             src={`${baseUrl}${mainImage.url}`}
@@ -75,7 +88,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
               {images.map((image, index) => (
                 <button
                   key={image.id}
-                  onClick={() => setSelectedIndex(index)}
+                  onClick={() => handleThumbnailClick(index)}
                   className={`w-full h-24 bg-gray-200 rounded overflow-hidden transition-all ${index === selectedIndex ? 'ring-2 ring-indigo-500' : 'hover:opacity-75'
                     }`}
                 >
@@ -84,6 +97,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
                     alt={image.alternativeText || `Thumbnail ${index + 1}`}
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    decoding="async"
                   />
                 </button>
               ))}
@@ -96,11 +110,11 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
       {lightboxOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
-          onClick={() => setLightboxOpen(false)}
+          onClick={handleLightboxClose}
         >
           <div className="relative max-w-7xl max-h-full">
             <button
-              onClick={() => setLightboxOpen(false)}
+              onClick={handleLightboxClose}
               className="absolute top-4 right-4 text-white hover:text-gray-300 z-10 bg-black bg-opacity-50 rounded-full p-2"
               aria-label="Close"
             >
@@ -171,6 +185,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
               alt={mainImage.alternativeText || 'Advertisement image'}
               className="max-w-full max-h-[90vh] object-contain"
               onClick={(e) => e.stopPropagation()}
+              decoding="async"
             />
             {images.length > 1 && (
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm">

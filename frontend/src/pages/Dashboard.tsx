@@ -30,7 +30,7 @@ const Dashboard = () => {
     queryFn: async () => {
       // Filter by current user - Strapi will automatically filter by authenticated user
       // but we can also add explicit filter if needed
-      const response = await api.get('/advertisements?populate=*&sort=createdAt:desc');
+      const response = await api.get('/advertisements?populate=category,city,images,user&sort=createdAt:desc');
       // Filter client-side to ensure we only show user's ads
       const filteredData = {
         ...response.data,
@@ -58,7 +58,7 @@ const Dashboard = () => {
   const { data: paymentRequestsData } = useQuery<ApiResponse<PaymentRequest[]>>({
     queryKey: ['payment-requests', user?.id],
     queryFn: async () => {
-      const response = await api.get('/payment-requests?populate=*&sort=createdAt:desc');
+      const response = await api.get('/payment-requests?populate=advertisement,subscriptionPlan&sort=createdAt:desc');
       return response.data;
     },
     enabled: isAuthenticated && !!user,

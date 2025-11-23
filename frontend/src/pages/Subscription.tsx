@@ -21,7 +21,7 @@ const Subscription = () => {
   const { data: subscriptionsData, isLoading } = useQuery<ApiResponse<UserSubscription[]>>({
     queryKey: ['user-subscriptions', user?.id],
     queryFn: async () => {
-      const response = await api.get('/user-subscriptions?populate=*&sort=createdAt:desc');
+      const response = await api.get('/user-subscriptions?populate=subscriptionPlan,user&sort=createdAt:desc');
       return response.data;
     },
     enabled: isAuthenticated && !!user,

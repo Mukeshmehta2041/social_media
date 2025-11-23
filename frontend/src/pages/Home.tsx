@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import api from '../services/api';
 import type { City, Advertisement, ApiResponse } from '../types';
 import AdCard from '../components/ads/AdCard';
@@ -17,13 +18,15 @@ const Home = () => {
   const { data: allAdsData, isLoading } = useQuery<ApiResponse<Advertisement[]>>({
     queryKey: ['all-ads'],
     queryFn: async () => {
-      const response = await api.get('/advertisements?filters[status][$eq]=approved&populate=category,city,images&sort=createdAt:desc&pagination[limit]=100');
+      const response = await api.get('/advertisements?filters[status][$eq]=approved&populate=category,city,images&sort=createdAt:desc&pagination[page]=1&pagination[pageSize]=24');
       return response.data;
     },
   });
 
-  const cities = citiesData?.data || [];
-  const allAds = allAdsData?.data || [];
+  const cities = useMemo(() => citiesData?.data || [], [citiesData?.data]);
+  const allAds = useMemo(() => allAdsData?.data || [], [allAdsData?.data]);
+  
+  const popularCities = useMemo(() => cities.slice(0, 12), [cities]);
 
   return (
     <>
@@ -66,7 +69,7 @@ const Home = () => {
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">Popular Cities</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {cities.slice(0, 12).map((city: City) => (
+              {popularCities.map((city: City) => (
                 <Link
                   key={city.id}
                   to={`/call-girls/${city.slug}`}

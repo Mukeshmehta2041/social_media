@@ -61,45 +61,6 @@ const AdDetail = () => {
         url={`${window.location.origin}/ad/${ad.id}`}
       />
       <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <nav className="mb-4 text-sm text-gray-600">
-          <ol className="flex space-x-2">
-            <li>
-              <a href="/" className="hover:text-indigo-600">
-                Home
-              </a>
-            </li>
-            <li>/</li>
-            {ad.city && (
-              <>
-                <li>
-                  <a
-                    href={`/call-girls/${ad.city.slug}`}
-                    className="hover:text-indigo-600"
-                  >
-                    {ad.city.name}
-                  </a>
-                </li>
-                <li>/</li>
-              </>
-            )}
-            {ad.category && (
-              <>
-                <li>
-                  <a
-                    href={`/category/${ad.category.slug}`}
-                    className="hover:text-indigo-600"
-                  >
-                    {ad.category.name}
-                  </a>
-                </li>
-                <li>/</li>
-              </>
-            )}
-            <li className="text-gray-900">{ad.title}</li>
-          </ol>
-        </nav>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <ImageGallery images={ad.images || []} />

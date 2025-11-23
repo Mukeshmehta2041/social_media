@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../services/api';
 import type { Category, City } from '../../types';
@@ -11,9 +11,20 @@ interface SearchBarProps {
 
 const SearchBar = ({ variant = 'default', onSearch }: SearchBarProps) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+
+  // Initialize from URL params
+  useEffect(() => {
+    const q = searchParams.get('q') || '';
+    const city = searchParams.get('city') || '';
+    const category = searchParams.get('category') || '';
+    setSearchQuery(q);
+    setSelectedCity(city);
+    setSelectedCategory(category);
+  }, [searchParams]);
 
   const { data: categoriesData } = useQuery({
     queryKey: ['categories'],

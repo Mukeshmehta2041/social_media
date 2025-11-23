@@ -26,24 +26,23 @@ const SearchResults = () => {
         'pagination[pageSize]': '24',
       });
 
-      if (search) params.append('filters[$or][0][title][$containsi]', search);
-      if (category) params.append('filters[category][slug][$eq]', category);
-      if (city) params.append('filters[city][slug][$eq]', city);
-      if (minPrice) params.append('filters[price][$gte]', minPrice);
-      if (maxPrice) params.append('filters[price][$lte]', maxPrice);
+      if (search) params.append('search', search);
+      if (category) params.append('category', category);
+      if (city) params.append('city', city);
+      if (minPrice) params.append('minPrice', minPrice);
+      if (maxPrice) params.append('maxPrice', maxPrice);
 
       // Sorting
       if (sort === 'newest') {
-        params.append('sort[0]', 'createdAt:desc');
+        params.append('sort', 'createdAt:desc');
       } else if (sort === 'oldest') {
-        params.append('sort[0]', 'createdAt:asc');
+        params.append('sort', 'createdAt:asc');
       } else if (sort === 'price-low') {
-        params.append('sort[0]', 'price:asc');
+        params.append('sort', 'price:asc');
       } else if (sort === 'price-high') {
-        params.append('sort[0]', 'price:desc');
+        params.append('sort', 'price:desc');
       }
 
-      params.append('filters[status][$eq]', 'approved');
       params.append('populate', 'category,city,images');
 
       const response = await api.get(`/advertisements?${params.toString()}`);

@@ -1,11 +1,13 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { HiArrowLeft } from 'react-icons/hi';
 import api from '../services/api';
 import type { City, Advertisement, ApiResponse } from '../types';
 import AdCard from '../components/ads/AdCard';
 
 const CityPage = () => {
   const { city } = useParams<{ city: string }>();
+  const navigate = useNavigate();
 
   const { data: cityData } = useQuery<ApiResponse<City[]>>({
     queryKey: ['city', city],
@@ -30,6 +32,13 @@ const CityPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <button
+        onClick={() => navigate(-1)}
+        className="mb-4 flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors"
+      >
+        <HiArrowLeft className="w-5 h-5" />
+        <span>Back</span>
+      </button>
       {cityInfo && (
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">

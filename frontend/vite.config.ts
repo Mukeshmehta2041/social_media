@@ -19,36 +19,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // React and core libraries
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
-            return 'react-vendor';
-          }
-          // React Query
-          if (id.includes('node_modules/@tanstack/react-query')) {
-            return 'query-vendor';
-          }
-          // Form libraries
-          if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/@hookform') || id.includes('node_modules/yup')) {
-            return 'form-vendor';
-          }
-          // Icons library (can be large)
-          if (id.includes('node_modules/react-icons')) {
-            return 'icons-vendor';
-          }
-          // Date utilities
-          if (id.includes('node_modules/date-fns')) {
-            return 'date-vendor';
-          }
-          // UI libraries
-          if (id.includes('node_modules/@headlessui')) {
-            return 'ui-vendor';
-          }
-          // Other node_modules
-          if (id.includes('node_modules')) {
-            return 'vendor';
-          }
-        },
+        manualChunks: undefined, // Disable manual chunking to avoid circular dependency issues
       },
     },
     chunkSizeWarningLimit: 1000,

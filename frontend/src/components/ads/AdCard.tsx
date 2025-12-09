@@ -23,6 +23,9 @@ interface AdCardProps {
   ad: Advertisement;
 }
 
+// Base64 encoded placeholder image (1x1 transparent PNG)
+const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+
 const AdCard = memo(({ ad }: AdCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -30,7 +33,7 @@ const AdCard = memo(({ ad }: AdCardProps) => {
   const imageUrl = useMemo(() => {
     return ad.images && ad.images.length > 0
       ? `${import.meta.env.VITE_API_URL || 'http://localhost:1337'}${ad.images[0].url}`
-      : '/placeholder-image.jpg';
+      : PLACEHOLDER_IMAGE;
   }, [ad.images]);
 
   const whatsappNumber = useMemo(() => ad.whatsappNumber || ad.contactPhone, [ad.whatsappNumber, ad.contactPhone]);
@@ -69,7 +72,11 @@ const AdCard = memo(({ ad }: AdCardProps) => {
           onError={(e) => {
             setImageError(true);
             setImageLoaded(true);
-            (e.target as HTMLImageElement).src = '/placeholder-image.jpg';
+            // Use data URI placeholder to prevent infinite loop
+            const target = e.target as HTMLImageElement;
+            if (target.src !== PLACEHOLDER_IMAGE) {
+              target.src = PLACEHOLDER_IMAGE;
+            }
           }}
         />
         {ad.isPremium && (

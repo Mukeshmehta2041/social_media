@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+dist
+build
+.DS_Store
+.git
+logs
+*.log
+.env
+**/.env
+frontend/dist
+backend/build
+npm-debug.log
+Dockerfile*
+docker-compose*.yml

@@ -9,8 +9,9 @@ COPY package*.json ./
 RUN npm install --legacy-peer-deps
 
 # Copy source and build
+# Increase Node.js heap size to handle Strapi build on low-memory systems
 COPY . ./
-RUN npm run build
+RUN NODE_OPTIONS="--max-old-space-size=1536" npm run build
 
 FROM node:20-bullseye-slim AS runner
 ENV NODE_ENV=production
